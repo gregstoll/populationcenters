@@ -1,0 +1,25 @@
+{
+  "name": "populationcenters",
+  "version": "1.0.0",
+  "description": "Find where to put things close to most of the US's population",
+  "main": "index.js",
+  "module": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gregstoll/populationcenters.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gregstoll/populationcenters/issues"
+  },
+  "homepage": "https://github.com/gregstoll/populationcenters#readme",
+  "dependencies": {
+    "d3-geo": "^1.11.9",
+    "esm": "^3.2.25",
+    "shapefile": "^0.6.6"
+  }
+}
