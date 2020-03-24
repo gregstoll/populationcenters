@@ -19,6 +19,7 @@
   "homepage": "https://github.com/gregstoll/populationcenters#readme",
   "dependencies": {
     "d3-geo": "^1.11.9",
+    "d3-dsv": "^1.2.0",
     "esm": "^3.2.25",
     "shapefile": "^0.6.6"
   }
