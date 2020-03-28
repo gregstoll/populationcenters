@@ -2,9 +2,10 @@
   "name": "populationcenters",
   "version": "1.0.0",
   "description": "Find where to put things close to most of the US's population",
-  "main": "index.js",
-  "module": "main.js",
+  "main": "src/app.js",
   "scripts": {
+    "start": "webpack-dev-server --open",
+    "build": "webpack -p --config webpack.prod.config.js --hide-modules",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -17,10 +18,17 @@
     "url": "https://github.com/gregstoll/populationcenters/issues"
   },
   "homepage": "https://github.com/gregstoll/populationcenters#readme",
+  "devDependencies": {
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11",
+    "webpack-dev-server": "^3.10.3"
+  },
   "dependencies": {
-    "d3-geo": "^1.11.9",
+    "d3": "^5",
     "d3-dsv": "^1.2.0",
+    "d3-geo": "^1.11.9",
     "esm": "^3.2.25",
-    "shapefile": "^0.6.6"
+    "shapefile": "^0.6.6",
+    "topojson": "^3.0.2"
   }
 }
