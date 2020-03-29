@@ -6,21 +6,20 @@ import * as topojson from 'topojson';
     // Adapted from https://observablehq.com/@d3/zoom-to-bounding-box
 
     const width = 975, height = 610;
-    //const width = 650, height = 400;
 
     // create path variable
     // Scale is per https://github.com/topojson/us-atlas
     let projection = d3.geoAlbers().scale(1300).translate([width/2, height/2]);
-    let path = d3.geoPath();//.projection(projection);
+    let path = d3.geoPath();
 
     let us = await d3.json("data/states-albers-10m.json");
-    let svg = d3.select("#map").append('svg')
+    let mapDiv = d3.select('#map');
+    mapDiv.attr('style', 'transform: scale(0.6)');
+    let svg = mapDiv.append('svg')
         .attr('width', width)
         .attr('height', height);
 
     let g = svg.append("g");
-    // This doesn't work with the geoAlbers scale above :-(
-    //g.attr('transform', 'scale(0.6)');
     let pointsG = svg.append("g");
 
     let states = us.objects.states;
@@ -47,19 +46,24 @@ import * as topojson from 'topojson';
     // 02 Alaska
     // 15 Hawaii
     // 72 Puerto Rico
-    countyData = countyData.filter(county => county.state !== "02" && county.state !== "15" && county.state !== "72");
+    // 56 Wyoming is the last "real" state
+    countyData = countyData.filter(county => {
+        const state = parseInt(county.state, 10);
+        if (state === 2 || state === 15) {
+            return false;
+        }
+        return state <= 56;
+    });
     // https://stackoverflow.com/questions/20987535/plotting-points-on-a-map-with-d3
     g.selectAll(".pin")
         .data(countyData)
         .enter()
         .append("circle", ".pin")
         .attr("class", "countyCircle")
-        .style("fill", "blue")
-        .style("fill-opacity", "0.4")
         .attr("r", function(d) {
             // radius should be proportional to sqrt(population)
             // so area is proportional to population
-            return Math.sqrt(d.population) / 100;
+            return Math.sqrt(d.population) / 75;
         })
         .attr("transform", function(d) {
             const parts = d.centroid.split(",");
