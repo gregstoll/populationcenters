@@ -9,15 +9,15 @@ import * as topojson from 'topojson';
     const width = 650, height = 400;
 
     // create path variable
-    var path = d3.geoPath();
+    let path = d3.geoPath();
 
     let us = await d3.json("data/states-albers-10m.json");
     //console.log(us);
-    var svg = d3.select("#map").append('svg')
+    let svg = d3.select("#map").append('svg')
         .attr('width', width)
         .attr('height', height);
 
-    var g = svg.append("g");
+    let g = svg.append("g");
     g.attr('transform', 'scale(0.6)');
 
     let states = us.objects.states;
