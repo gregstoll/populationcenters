@@ -19,6 +19,10 @@
   },
   "homepage": "https://github.com/gregstoll/populationcenters#readme",
   "devDependencies": {
+    "@types/d3": "^5.7.2",
+    "@types/topojson": "^3.2.2",
+    "ts-loader": "^6.2.2",
+    "typescript": "^3.8.3",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11",
     "webpack-dev-server": "^3.10.3"

@@ -1,6 +1,17 @@
 import * as d3 from 'd3'
 import * as topojson from 'topojson';
 
+interface CountyCentroid {
+    geoid: string,
+    state: string,
+    centroid: string,
+    population: number
+};
+
+interface HasFeatures {
+    features: any[]
+}
+
 (async function () {
 
     // Adapted from https://observablehq.com/@d3/zoom-to-bounding-box
@@ -12,6 +23,7 @@ import * as topojson from 'topojson';
     let projection = d3.geoAlbers().scale(1300).translate([width/2, height/2]);
     let path = d3.geoPath();
 
+    //TODO - type?
     let us = await d3.json("data/states-albers-10m.json");
     let mapDiv = d3.select('#map');
     mapDiv.attr('style', 'transform: scale(0.6)');
@@ -20,14 +32,16 @@ import * as topojson from 'topojson';
         .attr('height', height);
 
     let g = svg.append("g");
-    let pointsG = svg.append("g");
 
     let states = us.objects.states;
     states.geometries = states.geometries.filter(state => state.properties.name !== "Alaska" && state.properties.name !== "Hawaii");
 
+    // 'features' isn't a declared property?
+    // so tell TypeScript it's OK
+    const stateFeature : any = topojson.feature(us, states);
     // Draw states
     g.selectAll("path")
-        .data(topojson.feature(us, states).features)
+        .data(stateFeature.features)
         .join("path")
         .style("fill", "#ddd")
         .attr("d", path);
@@ -41,7 +55,7 @@ import * as topojson from 'topojson';
         //.attr("d", path(topojson.mesh(us, us.objects.states, (a, b) => a !== b)));
         .attr("d", path(topojson.mesh(us, states)));
 
-    let countyData = await d3.json("data/county_centroids.json");
+    let countyData : CountyCentroid[] = await d3.json("data/county_centroids.json");
     //filter out Alaska/Hawaii/territories
     // 02 Alaska
     // 15 Hawaii
@@ -58,7 +72,7 @@ import * as topojson from 'topojson';
     g.selectAll(".pin")
         .data(countyData)
         .enter()
-        .append("circle", ".pin")
+        .append("circle")
         .attr("class", "countyCircle")
         .attr("r", function(d) {
             // radius should be proportional to sqrt(population)
