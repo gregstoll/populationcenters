@@ -1,0 +1,14 @@
+[package]
+name = "populationcenters"
+version = "0.1.0"
+authors = ["Greg Stoll <greg@gregstoll.com>"]
+edition = "2018"
+
+[[bin]]
+name = "find_nearest_counties"
+path = "find_nearest_counties.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+json = "0.12.4"
