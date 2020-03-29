@@ -48,7 +48,7 @@ fs.readFile("county_shapes.json", 'utf8', function (err, contents) {
             //console.info(centroid);
             centroidData.push({"geoid": properties.GEOID, "state": properties.STATEFP, "centroid": centroid, "population" : population});
         }
-        fs.writeFile("county_centroids.json", JSON.stringify(centroidData, undefined, '\t'), 'utf8', function (err) {
+        fs.writeFile("data/county_centroids.json", JSON.stringify(centroidData, undefined, '\t'), 'utf8', function (err) {
             if (err) {
                 return console.error(err);
             }
