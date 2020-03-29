@@ -23,7 +23,6 @@ interface HasFeatures {
     let projection = d3.geoAlbers().scale(1300).translate([width/2, height/2]);
     let path = d3.geoPath();
 
-    //TODO - type?
     let us = await d3.json("data/states-albers-10m.json");
     let mapDiv = d3.select('#map');
     mapDiv.attr('style', 'transform: scale(0.6)');
