@@ -2,11 +2,16 @@ use std::fs;
 
 #[derive(Debug)]
 pub struct CountyData {
-    longitude: f32,
-    latitude: f32,
+    coordinate: Coordinate,
     geoid: String,
     state: u8,
     population: u32
+}
+
+#[derive(Debug)]
+pub struct Coordinate {
+    longitude: f32,
+    latitude: f32
 }
 
 fn main() {
@@ -27,6 +32,13 @@ fn should_process_county(county_data: &CountyData) -> bool {
     return state != 2 && state != 15 && state <= 56;
 }
 
+
+fn find_distance_between_coordinates(coord1: &Coordinate, coord2: &Coordinate) -> f32 {
+    // https://www.movable-type.co.uk/scripts/latlong.html
+    //TODO
+    return 0.0;
+}
+
 fn parse_county_data(j: &json::JsonValue) -> CountyData {
     if let json::JsonValue::Object(obj) = j {
         let centroid_str = obj.get("centroid").expect("No centroid").as_str().expect("Centroid is not a string?");
@@ -36,9 +48,12 @@ fn parse_county_data(j: &json::JsonValue) -> CountyData {
         let population: u32 = obj.get("population").expect("No population").as_u32().expect("population not an u32?");
         let geoid: String = String::from(obj.get("geoid").expect("No geoid").as_str().expect("Geoid is not a string?"));
         let state: u8 = obj.get("state").expect("No state").as_str().expect("State is not a string?").parse::<u8>().expect("State couldn't parse to u8");
-        return CountyData {
+        let coordinate: Coordinate = Coordinate {
             longitude,
-            latitude,
+            latitude
+        };
+        return CountyData {
+            coordinate,
             geoid,
             state,
             population
