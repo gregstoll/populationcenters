@@ -1,4 +1,5 @@
 use std::fs;
+use std::iter;
 use json;
 
 #[derive(Debug)]
@@ -33,15 +34,35 @@ fn should_process_county(county_data: &CountyData) -> bool {
     return state != 2 && state != 15 && state <= 56;
 }
 
-fn find_squared_distance_to_all_counties(locations: &[Coordinate], counties: &[CountyData]) -> f64 {
+
+fn find_closest_location_to_all_counties(counties: &[CountyData]) -> &Coordinate {
+    static zero_coordinate: Coordinate = Coordinate {
+        longitude: 0.0,
+        latitude: 0.0
+    };
+
+    let result = counties
+        .iter()
+        .map(|county| (find_squared_distance_to_all_counties(&iter::once(&county.coordinate), counties), &county.coordinate))
+        .fold((1./0. /*Inf*/, &zero_coordinate), |x, y| { if x.0 < y.0 { x } else { y }});
+    return result.1;
+}
+
+fn find_squared_distance_to_all_counties<'a, I>(locations: &I, counties: &'a [CountyData]) -> f64
+    where
+        I: Iterator<Item = &'a Coordinate> + Copy {
     let total = counties.iter().map(|county| find_squared_distance_to_single_county(locations, &county)).sum();
     return total;
 }
 
-fn find_squared_distance_to_single_county(locations: &[Coordinate], county: &CountyData) -> f64 {
+fn find_squared_distance_to_single_county<'a, I>(locations: &I, county: &'a CountyData) -> f64
+    where
+        I: Iterator<Item = &'a Coordinate> + Copy {
     let county_coordinate = &county.coordinate;
-    let max_distance = locations.iter().map(|location| find_distance_between_coordinates(location, &county_coordinate)).fold(0.0, f64::max);
-    return max_distance * max_distance;
+    let min_distance = locations
+        .map(|location| find_distance_between_coordinates(location, &county_coordinate))
+        .fold(1./0. /*Inf*/, f64::min);
+    return min_distance * min_distance;
 }
 
 /// Find the distance in km between two coordinates
