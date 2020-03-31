@@ -1,4 +1,5 @@
 use std::fs;
+use json;
 
 #[derive(Debug)]
 pub struct CountyData {
@@ -10,8 +11,8 @@ pub struct CountyData {
 
 #[derive(Debug)]
 pub struct Coordinate {
-    longitude: f32,
-    latitude: f32
+    longitude: f64,
+    latitude: f64
 }
 
 fn main() {
@@ -32,19 +33,43 @@ fn should_process_county(county_data: &CountyData) -> bool {
     return state != 2 && state != 15 && state <= 56;
 }
 
+fn find_squared_distance_to_all_counties(locations: &[Coordinate], counties: &[CountyData]) -> f64 {
+    let total = counties.iter().map(|county| find_squared_distance_to_single_county(locations, &county)).sum();
+    return total;
+}
 
-fn find_distance_between_coordinates(coord1: &Coordinate, coord2: &Coordinate) -> f32 {
-    // https://www.movable-type.co.uk/scripts/latlong.html
-    //TODO
-    return 0.0;
+fn find_squared_distance_to_single_county(locations: &[Coordinate], county: &CountyData) -> f64 {
+    let county_coordinate = &county.coordinate;
+    let max_distance = locations.iter().map(|location| find_distance_between_coordinates(location, &county_coordinate)).fold(0.0, f64::max);
+    return max_distance * max_distance;
+}
+
+/// Find the distance in km between two coordinates
+fn find_distance_between_coordinates(coord1: &Coordinate, coord2: &Coordinate) -> f64 {
+    // Haversine formula
+    // https://rust-lang-nursery.github.io/rust-cookbook/science/mathematics/trigonometry.html#distance-between-two-points-on-the-earth
+    let earth_radius_kilometer = 6371.0_f64;
+
+    let coord1_latitude_radians = coord1.latitude.to_radians();
+    let coord2_latitude_radians = coord2.latitude.to_radians();
+
+    let delta_latitude = (coord1.latitude - coord2.latitude).to_radians();
+    let delta_longitude = (coord1.longitude - coord2.longitude).to_radians();
+
+    let central_angle_inner = (delta_latitude / 2.0).sin().powi(2)
+        + coord1_latitude_radians.cos() * coord2_latitude_radians.cos() * (delta_longitude / 2.0).sin().powi(2);
+    let central_angle = 2.0 * central_angle_inner.sqrt().asin();
+
+    let distance = earth_radius_kilometer * central_angle;
+    return distance;
 }
 
 fn parse_county_data(j: &json::JsonValue) -> CountyData {
     if let json::JsonValue::Object(obj) = j {
         let centroid_str = obj.get("centroid").expect("No centroid").as_str().expect("Centroid is not a string?");
         let centroid_str_parts: Vec<&str> = centroid_str.split(',').collect();
-        let longitude: f32 = centroid_str_parts[0].parse::<f32>().expect("Longitude not an f32?");
-        let latitude: f32 = centroid_str_parts[1].parse::<f32>().expect("Longitude not an f32?");
+        let longitude: f64 = centroid_str_parts[0].parse::<f64>().expect("Longitude not an f64?");
+        let latitude: f64 = centroid_str_parts[1].parse::<f64>().expect("Longitude not an f64?");
         let population: u32 = obj.get("population").expect("No population").as_u32().expect("population not an u32?");
         let geoid: String = String::from(obj.get("geoid").expect("No geoid").as_str().expect("Geoid is not a string?"));
         let state: u8 = obj.get("state").expect("No state").as_str().expect("State is not a string?").parse::<u8>().expect("State couldn't parse to u8");
@@ -61,5 +86,23 @@ fn parse_county_data(j: &json::JsonValue) -> CountyData {
     }
     else {
         panic!("Got unrecognized type");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn find_distance_between_london_and_paris() {
+        let paris = Coordinate {
+            longitude: -2.34880_f64,
+            latitude: 48.85341_f64
+        };
+        let london = Coordinate {
+            longitude: -0.12574_f64,
+            latitude: 51.50853_f64
+        };
+        assert_eq!(335, find_distance_between_coordinates(&paris, &london).round() as u32);
     }
 }
