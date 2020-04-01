@@ -1,6 +1,7 @@
 use std::fs;
 use std::iter;
 use std::fmt;
+use std::time;
 use json;
 
 #[derive(Debug)]
@@ -24,9 +25,11 @@ impl fmt::Display for Coordinate {
 }
 
 fn main() {
+    let start_time = time::Instant::now();
     let county_datas = read_county_data();
     println!("Got {} counties", county_datas.len());
-    println!("{}", find_closest_location_to_all_counties(&county_datas))
+    println!("{}", find_closest_location_to_all_counties(&county_datas));
+    println!("took {} secs", time::Instant::now().duration_since(start_time).as_secs_f32());
 }
 
 fn read_county_data() -> Vec::<CountyData> {
@@ -34,7 +37,6 @@ fn read_county_data() -> Vec::<CountyData> {
     let county_parsed_json = json::parse(&contents).expect("Failed to parse JSON");
     let county_datas : Vec::<CountyData> =
         county_parsed_json.members().map(|value| parse_county_data(value)).filter(should_process_county).collect();
-    println!("Got {} counties", county_datas.len());
     return county_datas;
 }
 
