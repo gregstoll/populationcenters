@@ -12,7 +12,18 @@ pub struct CountyData {
     population: u32
 }
 
-#[derive(Debug, PartialEq)]
+impl Clone for CountyData {
+    fn clone(&self) -> CountyData {
+        CountyData {
+            coordinate: self.coordinate,
+            geoid: self.geoid.clone(),
+            state: self.state,
+            population: self.population
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Coordinate {
     longitude: f64,
     latitude: f64
@@ -23,16 +34,6 @@ impl fmt::Display for Coordinate {
         write!(f, "({}, {})", self.longitude, self.latitude)
     }
 }
-
-impl Clone for Coordinate {
-    fn clone(&self) -> Coordinate {
-        Coordinate {
-            longitude: self.longitude,
-            latitude: self.latitude
-        }
-    }
-}
-
 fn main() {
     let start_time = time::Instant::now();
     let county_datas = read_county_data();
@@ -85,7 +86,7 @@ fn find_squared_distance_to_single_county<'a, I>(locations: I, county: &'a Count
         I: Iterator<Item = &'a Coordinate> + Clone {
     let county_coordinate = &county.coordinate;
     let min_distance = locations
-        .map(|location| find_distance_between_coordinates(location, &county_coordinate))
+        .map(|location| find_distance_between_coordinates(location, &county_coordinate) * f64::from(county.population))
         .fold(1./0. /*Inf*/, f64::min);
     return min_distance * min_distance;
 }
@@ -154,12 +155,26 @@ mod tests {
 
     #[test]
     fn find_closest_location_to_all_counties_same_population() {
-        let countyDataLeft = make_simple_county_data(-5.0, 0.0, 1000);
-        let countyDataCenter = make_simple_county_data(0.0, 0.0, 1000);
-        let countyDataRight = make_simple_county_data(5.0, 0.0, 1000);
+        let county_data_left = make_simple_county_data(-5.0, 0.0, 1000);
+        let county_data_center = make_simple_county_data(0.0, 0.0, 1000);
+        let county_data_right = make_simple_county_data(5.0, 0.0, 1000);
 
-        let closest = find_closest_location_to_all_counties(&[countyDataLeft, countyDataCenter, countyDataRight]);
-        assert_eq!(countyDataCenter.coordinate, closest.clone());
+        let expected = county_data_center.coordinate;
+        let counties = [county_data_left, county_data_center, county_data_right];
+        let closest = find_closest_location_to_all_counties(&counties);
+        assert_eq!(expected, closest.clone());
+    }
+
+    #[test]
+    fn find_closest_location_to_all_counties_different_population() {
+        let county_data_left = make_simple_county_data(-5.0, 0.0, 1000);
+        let county_data_center = make_simple_county_data(0.0, 0.0, 1000);
+        let county_data_right = make_simple_county_data(5.0, 0.0, 5000000);
+
+        let expected = county_data_right.coordinate;
+        let counties = [county_data_left, county_data_center, county_data_right];
+        let closest = find_closest_location_to_all_counties(&counties);
+        assert_eq!(expected, closest.clone());
     }
 
     fn make_simple_county_data(longitude: f64, latitude: f64, population: u32) -> CountyData {
