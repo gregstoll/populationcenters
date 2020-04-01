@@ -1,5 +1,6 @@
 use std::fs;
 use std::iter;
+use std::fmt;
 use json;
 
 #[derive(Debug)]
@@ -16,12 +17,25 @@ pub struct Coordinate {
     latitude: f64
 }
 
+impl fmt::Display for Coordinate {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "({}, {})", self.longitude, self.latitude)
+    }
+}
+
 fn main() {
+    let county_datas = read_county_data();
+    println!("Got {} counties", county_datas.len());
+    println!("{}", find_closest_location_to_all_counties(&county_datas))
+}
+
+fn read_county_data() -> Vec::<CountyData> {
     let contents = fs::read_to_string("data/county_centroids.json").expect("Failed to open county_centroids");
     let county_parsed_json = json::parse(&contents).expect("Failed to parse JSON");
     let county_datas : Vec::<CountyData> =
         county_parsed_json.members().map(|value| parse_county_data(value)).filter(should_process_county).collect();
     println!("Got {} counties", county_datas.len());
+    return county_datas;
 }
 
 fn should_process_county(county_data: &CountyData) -> bool {
@@ -36,28 +50,29 @@ fn should_process_county(county_data: &CountyData) -> bool {
 
 
 fn find_closest_location_to_all_counties(counties: &[CountyData]) -> &Coordinate {
-    static zero_coordinate: Coordinate = Coordinate {
+    static ZERO_COORDINATE: Coordinate = Coordinate {
         longitude: 0.0,
         latitude: 0.0
     };
 
     let result = counties
         .iter()
-        .map(|county| (find_squared_distance_to_all_counties(&iter::once(&county.coordinate), counties), &county.coordinate))
-        .fold((1./0. /*Inf*/, &zero_coordinate), |x, y| { if x.0 < y.0 { x } else { y }});
+        .map(|county| (find_squared_distance_to_all_counties(iter::once(&county.coordinate), counties), &county.coordinate))
+        .fold((1./0. /*Inf*/, &ZERO_COORDINATE), |x, y| { if x.0 < y.0 { x } else { y }});
     return result.1;
 }
 
-fn find_squared_distance_to_all_counties<'a, I>(locations: &I, counties: &'a [CountyData]) -> f64
+fn find_squared_distance_to_all_counties<'a, I>(locations: I, counties: &'a [CountyData]) -> f64
     where
-        I: Iterator<Item = &'a Coordinate> + Copy {
-    let total = counties.iter().map(|county| find_squared_distance_to_single_county(locations, &county)).sum();
+        I: Iterator<Item = &'a Coordinate> + Clone {
+    // TODO - this clone() is pretty ugly
+    let total = counties.iter().map(|county| find_squared_distance_to_single_county(locations.clone(), &county)).sum();
     return total;
 }
 
-fn find_squared_distance_to_single_county<'a, I>(locations: &I, county: &'a CountyData) -> f64
+fn find_squared_distance_to_single_county<'a, I>(locations: I, county: &'a CountyData) -> f64
     where
-        I: Iterator<Item = &'a Coordinate> + Copy {
+        I: Iterator<Item = &'a Coordinate> + Clone {
     let county_coordinate = &county.coordinate;
     let min_distance = locations
         .map(|location| find_distance_between_coordinates(location, &county_coordinate))
