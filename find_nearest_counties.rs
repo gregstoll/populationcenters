@@ -12,7 +12,7 @@ pub struct CountyData {
     population: u32
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Coordinate {
     longitude: f64,
     latitude: f64
@@ -21,6 +21,15 @@ pub struct Coordinate {
 impl fmt::Display for Coordinate {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "({}, {})", self.longitude, self.latitude)
+    }
+}
+
+impl Clone for Coordinate {
+    fn clone(&self) -> Coordinate {
+        Coordinate {
+            longitude: self.longitude,
+            latitude: self.latitude
+        }
     }
 }
 
@@ -49,7 +58,6 @@ fn should_process_county(county_data: &CountyData) -> bool {
     let state = county_data.state;
     return state != 2 && state != 15 && state <= 56;
 }
-
 
 fn find_closest_location_to_all_counties(counties: &[CountyData]) -> &Coordinate {
     static ZERO_COORDINATE: Coordinate = Coordinate {
@@ -142,5 +150,27 @@ mod tests {
             latitude: 51.50853_f64
         };
         assert_eq!(335, find_distance_between_coordinates(&paris, &london).round() as u32);
+    }
+
+    #[test]
+    fn find_closest_location_to_all_counties_same_population() {
+        let countyDataLeft = make_simple_county_data(-5.0, 0.0, 1000);
+        let countyDataCenter = make_simple_county_data(0.0, 0.0, 1000);
+        let countyDataRight = make_simple_county_data(5.0, 0.0, 1000);
+
+        let closest = find_closest_location_to_all_counties(&[countyDataLeft, countyDataCenter, countyDataRight]);
+        assert_eq!(countyDataCenter.coordinate, closest.clone());
+    }
+
+    fn make_simple_county_data(longitude: f64, latitude: f64, population: u32) -> CountyData {
+        return CountyData {
+            coordinate: Coordinate {
+                longitude,
+                latitude
+            },
+            geoid: "".to_string(),
+            state: 1,
+            population
+        };
     }
 }
