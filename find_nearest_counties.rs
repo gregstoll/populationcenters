@@ -12,6 +12,12 @@ pub struct CountyData {
     population: u32
 }
 
+impl fmt::Display for CountyData {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}, geoid: {}, state: {}, population: {}", self.coordinate, self.geoid, self.state, self.population)
+    }
+}
+
 impl Clone for CountyData {
     fn clone(&self) -> CountyData {
         CountyData {
