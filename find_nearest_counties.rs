@@ -1,7 +1,7 @@
 use std::fs;
-use std::iter;
 use std::fmt;
 use std::time;
+use itertools::Itertools;
 use json;
 
 #[derive(Debug)]
@@ -40,11 +40,13 @@ impl fmt::Display for Coordinate {
         write!(f, "({}, {})", self.longitude, self.latitude)
     }
 }
+
 fn main() {
     let start_time = time::Instant::now();
     let county_datas = read_county_data();
     println!("Got {} counties", county_datas.len());
-    println!("{}", find_closest_location_to_all_counties(&county_datas));
+    println!("{:?}", find_closest_location_to_all_counties(&county_datas, 1));
+    println!("{:?}", find_closest_location_to_all_counties(&county_datas, 2));
     println!("took {} secs", time::Instant::now().duration_since(start_time).as_secs_f32());
 }
 
@@ -66,32 +68,26 @@ fn should_process_county(county_data: &CountyData) -> bool {
     return state != 2 && state != 15 && state <= 56;
 }
 
-fn find_closest_location_to_all_counties(counties: &[CountyData]) -> &Coordinate {
-    static ZERO_COORDINATE: Coordinate = Coordinate {
-        longitude: 0.0,
-        latitude: 0.0
-    };
+fn find_closest_location_to_all_counties(counties: &[CountyData], number_of_locations: u8) -> Vec<Coordinate> {
+    let empty_vec = vec!();
 
-    let result = counties
-        .iter()
-        .map(|county| (find_squared_distance_to_all_counties(iter::once(&county.coordinate), counties), &county.coordinate))
-        .fold((1./0. /*Inf*/, &ZERO_COORDINATE), |x, y| { if x.0 < y.0 { x } else { y }});
+    let location_choices_iterator = counties.iter().map(|county| county.coordinate).combinations(usize::from(number_of_locations));
+
+    let result = location_choices_iterator
+        .map(|location_choices| (find_squared_distance_to_all_counties(&location_choices, &counties), location_choices))
+        .fold((1./0. /*Inf*/, empty_vec), |x, y| { if x.0 < y.0 { x } else { y }});
     return result.1;
 }
 
-fn find_squared_distance_to_all_counties<'a, I>(locations: I, counties: &'a [CountyData]) -> f64
-    where
-        I: Iterator<Item = &'a Coordinate> + Clone {
-    // TODO - this clone() is pretty ugly
-    let total = counties.iter().map(|county| find_squared_distance_to_single_county(locations.clone(), &county)).sum();
+fn find_squared_distance_to_all_counties<'a>(locations: &Vec<Coordinate>, counties: &'a [CountyData]) -> f64 {
+    let total = counties.iter().map(|county| find_squared_distance_to_single_county(locations, &county)).sum();
     return total;
 }
 
-fn find_squared_distance_to_single_county<'a, I>(locations: I, county: &'a CountyData) -> f64
-    where
-        I: Iterator<Item = &'a Coordinate> + Clone {
+fn find_squared_distance_to_single_county<'a>(locations: &Vec<Coordinate>, county: &'a CountyData) -> f64 {
     let county_coordinate = &county.coordinate;
     let min_distance = locations
+        .iter()
         .map(|location| find_distance_between_coordinates(location, &county_coordinate) * f64::from(county.population))
         .fold(1./0. /*Inf*/, f64::min);
     return min_distance * min_distance;
@@ -165,10 +161,10 @@ mod tests {
         let county_data_center = make_simple_county_data(0.0, 0.0, 1000);
         let county_data_right = make_simple_county_data(5.0, 0.0, 1000);
 
-        let expected = county_data_center.coordinate;
+        let expected = vec!(county_data_center.coordinate);
         let counties = [county_data_left, county_data_center, county_data_right];
-        let closest = find_closest_location_to_all_counties(&counties);
-        assert_eq!(expected, closest.clone());
+        let closest = find_closest_location_to_all_counties(&counties, 1);
+        assert_eq!(expected, closest);
     }
 
     #[test]
@@ -177,10 +173,25 @@ mod tests {
         let county_data_center = make_simple_county_data(0.0, 0.0, 1000);
         let county_data_right = make_simple_county_data(5.0, 0.0, 5000000);
 
-        let expected = county_data_right.coordinate;
+        let expected = vec!(county_data_right.coordinate);
         let counties = [county_data_left, county_data_center, county_data_right];
-        let closest = find_closest_location_to_all_counties(&counties);
-        assert_eq!(expected, closest.clone());
+        let closest = find_closest_location_to_all_counties(&counties, 1);
+        assert_eq!(expected, closest);
+    }
+
+    #[test]
+    fn find_closest_2_locations_to_all_counties_same_population() {
+        let county_data_left_1 = make_simple_county_data(-5.0, 0.0, 1000);
+        let county_data_center_1 = make_simple_county_data(0.0, 0.0, 1000);
+        let county_data_right_1 = make_simple_county_data(5.0, 0.0, 1000);
+        let county_data_left_2 = make_simple_county_data(25.0, 0.0, 1000);
+        let county_data_center_2 = make_simple_county_data(30.0, 0.0, 1000);
+        let county_data_right_2 = make_simple_county_data(35.0, 0.0, 1000);
+
+        let expected = vec!(county_data_center_1.coordinate, county_data_center_2.coordinate);
+        let counties = [county_data_left_1, county_data_center_1, county_data_right_1, county_data_left_2, county_data_center_2, county_data_right_2];
+        let closest = find_closest_location_to_all_counties(&counties, 2);
+        assert_eq!(expected, closest);
     }
 
     fn make_simple_county_data(longitude: f64, latitude: f64, population: u32) -> CountyData {
