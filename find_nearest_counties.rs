@@ -3,6 +3,9 @@ use std::fmt;
 use std::time;
 use itertools::Itertools;
 use json;
+use rayon::prelude::*;
+
+static COMPUTE_IN_PARALLEL : bool = true;
 
 #[derive(Debug)]
 pub struct CountyData {
@@ -34,6 +37,8 @@ pub struct Coordinate {
     longitude: f64,
     latitude: f64
 }
+
+unsafe impl Send for Coordinate {}
 
 impl fmt::Display for Coordinate {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -69,14 +74,32 @@ fn should_process_county(county_data: &CountyData) -> bool {
 }
 
 fn find_closest_location_to_all_counties(counties: &[CountyData], number_of_locations: u8) -> Vec<Coordinate> {
-    let empty_vec = vec!();
+    let empty_vec : Vec<Coordinate> = vec!();
 
-    let location_choices_iterator = counties.iter().map(|county| county.coordinate).combinations(usize::from(number_of_locations));
+    //TODO - unify these somewhat?
+    if COMPUTE_IN_PARALLEL {
+        // TODO - unfortunate we have to build up this giant Vec
+        // instead of doing things lazily
+        let location_choices : Vec<Vec<Coordinate>> = counties
+            .iter()
+            .map(|county| county.coordinate).combinations(usize::from(number_of_locations)).collect();
 
-    let result = location_choices_iterator
-        .map(|location_choices| (find_squared_distance_to_all_counties(&location_choices, &counties), location_choices))
-        .fold((1./0. /*Inf*/, empty_vec), |x, y| { if x.0 < y.0 { x } else { y }});
-    return result.1;
+        let result = location_choices
+            .par_iter()
+            .map(|location_choice| (find_squared_distance_to_all_counties(&location_choice, &counties), location_choice))
+            .reduce(|| (1./0. /*Inf*/, &empty_vec), |x, y| { if x.0 < y.0 { x } else { y }});
+        return result.1.clone();
+    }
+    else {
+        let location_choices = counties
+            .iter()
+            .map(|county| county.coordinate).combinations(usize::from(number_of_locations));
+
+        let result = location_choices
+            .map(|location_choice| (find_squared_distance_to_all_counties(&location_choice, &counties), location_choice))
+            .fold((1./0. /*Inf*/, empty_vec), |x, y| { if x.0 < y.0 { x } else { y }});
+        return result.1;
+    }
 }
 
 fn find_squared_distance_to_all_counties<'a>(locations: &Vec<Coordinate>, counties: &'a [CountyData]) -> f64 {
