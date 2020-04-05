@@ -1,12 +1,22 @@
+use std::collections::HashMap;
 use std::fs;
 use std::fmt;
+use std::hash::{Hash, Hasher};
+use std::sync::Mutex;
 use std::time;
 use itertools::Itertools;
 use json;
 use rayon::prelude::*;
+#[macro_use]
+extern crate lazy_static;
 
 static COMPUTE_IN_PARALLEL : bool = true;
 
+lazy_static! {
+    //static ref DISTANCE_DATA: HashMap<(Coordinate, Coordinate), f64> = HashMap::with_capacity(3100 * 3100);
+}
+static DISTANCE_DATA : Mutex<HashMap<(Coordinate, Coordinate), f64>> = Mutex::new(HashMap::with_capacity(3100 * 3100));
+//static DIST = 
 #[derive(Debug)]
 pub struct CountyData {
     coordinate: Coordinate,
@@ -38,6 +48,21 @@ pub struct Coordinate {
     latitude: f64
 }
 
+// This is all a little suspicious, but we use the exact same
+// f64 values for Coordinates so it should be OK.
+impl Eq for Coordinate { }
+//    fn eq(&self, other: &Self) -> bool { }
+//        self.longitude.p }artial
+//    }
+//}
+impl Hash for Coordinate {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.longitude.to_bits().hash(state);
+        self.latitude.to_bits().hash(state);
+    }
+}
+
+//TODO - remove?
 unsafe impl Send for Coordinate {}
 
 impl fmt::Display for Coordinate {
@@ -52,8 +77,10 @@ fn main() {
     println!("Got {} counties", county_datas.len());
     println!("{:?}", find_closest_location_to_all_counties(&county_datas, 1));
     println!("{:?}", find_closest_location_to_all_counties(&county_datas, 2));
+    //println!("{:?}", find_closest_location_to_all_counties(&county_datas, 3));
     println!("took {} secs", time::Instant::now().duration_since(start_time).as_secs_f32());
 }
+
 
 fn read_county_data() -> Vec::<CountyData> {
     let contents = fs::read_to_string("data/county_centroids.json").expect("Failed to open county_centroids");
@@ -80,6 +107,7 @@ fn find_closest_location_to_all_counties(counties: &[CountyData], number_of_loca
     if COMPUTE_IN_PARALLEL {
         // TODO - unfortunate we have to build up this giant Vec
         // instead of doing things lazily
+        // TODO - split this up into chunks?
         let location_choices : Vec<Vec<Coordinate>> = counties
             .iter()
             .map(|county| county.coordinate).combinations(usize::from(number_of_locations)).collect();
@@ -118,6 +146,10 @@ fn find_squared_distance_to_single_county<'a>(locations: &Vec<Coordinate>, count
 
 /// Find the distance in km between two coordinates
 fn find_distance_between_coordinates(coord1: &Coordinate, coord2: &Coordinate) -> f64 {
+    let hash_key = (*coord1, *coord2);
+    if let Some(cached_distance) = DISTANCE_DATA.get(&hash_key) {
+        return *cached_distance;
+    }
     // Haversine formula
     // https://rust-lang-nursery.github.io/rust-cookbook/science/mathematics/trigonometry.html#distance-between-two-points-on-the-earth
     let earth_radius_kilometer = 6371.0_f64;
@@ -133,6 +165,7 @@ fn find_distance_between_coordinates(coord1: &Coordinate, coord2: &Coordinate) -
     let central_angle = 2.0 * central_angle_inner.sqrt().asin();
 
     let distance = earth_radius_kilometer * central_angle;
+    DISTANCE_DATA.insert(hash_key, distance);
     return distance;
 }
 
