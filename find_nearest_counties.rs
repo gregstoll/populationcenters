@@ -139,9 +139,14 @@ fn find_squared_distance_to_single_county<'a>(locations: &Vec<Coordinate>, count
     let county_coordinate = &county.coordinate;
     let min_distance = locations
         .iter()
-        .map(|location| find_distance_between_coordinates(location, &county_coordinate) * f64::from(county.population))
+        .map(|location| find_squared_distance_between_coordinates(location, &county_coordinate) * f64::from(county.population))
         .fold(1./0. /*Inf*/, f64::min);
     return min_distance * min_distance;
+}
+
+fn find_squared_distance_between_coordinates(coord1: &Coordinate, coord2: &Coordinate) -> f64 {
+    let distance = find_distance_between_coordinates(coord1, coord2);
+    return distance * distance;
 }
 
 /// Find the distance in km between two coordinates
