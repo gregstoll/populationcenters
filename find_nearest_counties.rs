@@ -10,13 +10,12 @@ use rayon::prelude::*;
 #[macro_use]
 extern crate lazy_static;
 
-static COMPUTE_IN_PARALLEL : bool = true;
+static COMPUTE_IN_PARALLEL : bool = false;
 
 lazy_static! {
-    //static ref DISTANCE_DATA: HashMap<(Coordinate, Coordinate), f64> = HashMap::with_capacity(3100 * 3100);
+    static ref DISTANCE_DATA : Mutex<HashMap<(Coordinate, Coordinate), f64>> = Mutex::new(HashMap::with_capacity(3100 * 3100));
 }
-static DISTANCE_DATA : Mutex<HashMap<(Coordinate, Coordinate), f64>> = Mutex::new(HashMap::with_capacity(3100 * 3100));
-//static DIST = 
+
 #[derive(Debug)]
 pub struct CountyData {
     coordinate: Coordinate,
@@ -145,16 +144,18 @@ fn find_squared_distance_to_single_county<'a>(locations: &Vec<Coordinate>, count
 }
 
 fn find_squared_distance_between_coordinates(coord1: &Coordinate, coord2: &Coordinate) -> f64 {
+    let hash_key = (*coord1, *coord2);
+    if let Some(cached_distance) = DISTANCE_DATA.lock().unwrap().get(&hash_key) {
+        return *cached_distance;
+    }
     let distance = find_distance_between_coordinates(coord1, coord2);
-    return distance * distance;
+    let squared_distance = distance * distance;
+    DISTANCE_DATA.lock().unwrap().insert(hash_key, squared_distance);
+    return squared_distance;
 }
 
 /// Find the distance in km between two coordinates
 fn find_distance_between_coordinates(coord1: &Coordinate, coord2: &Coordinate) -> f64 {
-    let hash_key = (*coord1, *coord2);
-    if let Some(cached_distance) = DISTANCE_DATA.get(&hash_key) {
-        return *cached_distance;
-    }
     // Haversine formula
     // https://rust-lang-nursery.github.io/rust-cookbook/science/mathematics/trigonometry.html#distance-between-two-points-on-the-earth
     let earth_radius_kilometer = 6371.0_f64;
@@ -170,7 +171,6 @@ fn find_distance_between_coordinates(coord1: &Coordinate, coord2: &Coordinate) -
     let central_angle = 2.0 * central_angle_inner.sqrt().asin();
 
     let distance = earth_radius_kilometer * central_angle;
-    DISTANCE_DATA.insert(hash_key, distance);
     return distance;
 }
 
