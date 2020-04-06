@@ -1,24 +1,18 @@
-use std::collections::HashMap;
+use std::convert::From;
 use std::fs;
 use std::fmt;
 use std::hash::{Hash, Hasher};
-use std::sync::Mutex;
 use std::time;
 use itertools::Itertools;
 use json;
 use rayon::prelude::*;
-#[macro_use]
-extern crate lazy_static;
 
 static COMPUTE_IN_PARALLEL : bool = false;
-
-lazy_static! {
-    static ref DISTANCE_DATA : Mutex<HashMap<(Coordinate, Coordinate), f64>> = Mutex::new(HashMap::with_capacity(3100 * 3100));
-}
 
 #[derive(Debug)]
 pub struct CountyData {
     coordinate: Coordinate,
+    index: usize,
     geoid: String,
     state: u8,
     population: u32
@@ -26,7 +20,7 @@ pub struct CountyData {
 
 impl fmt::Display for CountyData {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}, geoid: {}, state: {}, population: {}", self.coordinate, self.geoid, self.state, self.population)
+        write!(f, "{}, index: {}, geoid: {}, state: {}, population: {}", self.coordinate, self.index, self.geoid, self.state, self.population)
     }
 }
 
@@ -34,6 +28,7 @@ impl Clone for CountyData {
     fn clone(&self) -> CountyData {
         CountyData {
             coordinate: self.coordinate,
+            index: self.index,
             geoid: self.geoid.clone(),
             state: self.state,
             population: self.population
@@ -70,6 +65,27 @@ impl fmt::Display for Coordinate {
     }
 }
 
+struct DistanceCache {
+    entries: Vec<f64>,
+    number_of_columns: usize
+}
+impl DistanceCache {
+    fn new(coords: Vec<Coordinate>) -> DistanceCache {
+        let mut entries: Vec<f64> = Vec::with_capacity(coords.len() * coords.len());
+        for (_, coord1) in coords.iter().enumerate() {
+            for (_, coord2) in coords.iter().enumerate() {
+                let squared_distance = find_squared_distance_between_coordinates(&coord1, &coord2, None, None, None);
+                // TODO Does twice as much work as necessary
+                entries.push(squared_distance);
+            }
+        }
+        //TODO
+        println!("Counties {:?}", coords);
+        println!("Distances {:?}", entries);
+        return DistanceCache { entries, number_of_columns: coords.len() };
+    }
+}
+
 fn main() {
     let start_time = time::Instant::now();
     let county_datas = read_county_data();
@@ -84,9 +100,16 @@ fn main() {
 fn read_county_data() -> Vec::<CountyData> {
     let contents = fs::read_to_string("data/county_centroids.json").expect("Failed to open county_centroids");
     let county_parsed_json = json::parse(&contents).expect("Failed to parse JSON");
-    let county_datas : Vec::<CountyData> =
+    let mut county_datas : Vec::<CountyData> =
         county_parsed_json.members().map(|value| parse_county_data(value)).filter(should_process_county).collect();
+    update_county_indices(&mut county_datas);
     return county_datas;
+}
+
+fn update_county_indices(county_datas: &mut [CountyData]) {
+    for (i, county) in county_datas.iter_mut().enumerate() {
+        county.index = i;
+    }
 }
 
 fn should_process_county(county_data: &CountyData) -> bool {
@@ -99,8 +122,10 @@ fn should_process_county(county_data: &CountyData) -> bool {
     return state != 2 && state != 15 && state <= 56;
 }
 
+// Assumes that update_county_indices has been called on counties
 fn find_closest_location_to_all_counties(counties: &[CountyData], number_of_locations: u8) -> Vec<Coordinate> {
     let empty_vec : Vec<Coordinate> = vec!();
+    let distance_data = DistanceCache::new(counties.iter().map(|county| county.coordinate).collect());
 
     //TODO - unify these somewhat?
     if COMPUTE_IN_PARALLEL {
@@ -113,7 +138,7 @@ fn find_closest_location_to_all_counties(counties: &[CountyData], number_of_loca
 
         let result = location_choices
             .par_iter()
-            .map(|location_choice| (find_squared_distance_to_all_counties(&location_choice, &counties), location_choice))
+            .map(|location_choice| (find_squared_distance_to_all_counties(&location_choice, &counties, Some(&distance_data)), location_choice))
             .reduce(|| (1./0. /*Inf*/, &empty_vec), |x, y| { if x.0 < y.0 { x } else { y }});
         return result.1.clone();
     }
@@ -123,34 +148,43 @@ fn find_closest_location_to_all_counties(counties: &[CountyData], number_of_loca
             .map(|county| county.coordinate).combinations(usize::from(number_of_locations));
 
         let result = location_choices
-            .map(|location_choice| (find_squared_distance_to_all_counties(&location_choice, &counties), location_choice))
+            .map(|location_choice| (find_squared_distance_to_all_counties(&location_choice, &counties, Some(&distance_data)), location_choice))
             .fold((1./0. /*Inf*/, empty_vec), |x, y| { if x.0 < y.0 { x } else { y }});
         return result.1;
     }
 }
 
-fn find_squared_distance_to_all_counties<'a>(locations: &Vec<Coordinate>, counties: &'a [CountyData]) -> f64 {
-    let total = counties.iter().map(|county| find_squared_distance_to_single_county(locations, &county)).sum();
+fn find_squared_distance_to_all_counties<'a>(locations: &Vec<Coordinate>, counties: &'a [CountyData], distance_data_option: Option<&DistanceCache>) -> f64 {
+    let total = counties.iter().map(|county| find_squared_distance_to_single_county(locations, &county, distance_data_option)).sum();
     return total;
 }
 
-fn find_squared_distance_to_single_county<'a>(locations: &Vec<Coordinate>, county: &'a CountyData) -> f64 {
+fn find_squared_distance_to_single_county<'a>(locations: &Vec<Coordinate>, county: &'a CountyData, distance_data_option: Option<&DistanceCache>) -> f64 {
     let county_coordinate = &county.coordinate;
     let min_distance = locations
         .iter()
-        .map(|location| find_squared_distance_between_coordinates(location, &county_coordinate) * f64::from(county.population))
+        .enumerate()
+        .map(|(i, location)| find_squared_distance_between_coordinates(location, &county_coordinate, Some(i), Some(county.index), distance_data_option) * f64::from(county.population))
         .fold(1./0. /*Inf*/, f64::min);
     return min_distance * min_distance;
 }
 
-fn find_squared_distance_between_coordinates(coord1: &Coordinate, coord2: &Coordinate) -> f64 {
-    let hash_key = (*coord1, *coord2);
-    if let Some(cached_distance) = DISTANCE_DATA.lock().unwrap().get(&hash_key) {
-        return *cached_distance;
+fn find_squared_distance_between_coordinates(
+    coord1: &Coordinate,
+    coord2: &Coordinate,
+    index1_option: Option<usize>,
+    index2_option: Option<usize>,
+    distance_data_option: Option<&DistanceCache>) -> f64 {
+    if let Some(distance_data) = distance_data_option {
+        if let Some(index1) = index1_option {
+            if let Some(index2) = index2_option {
+                return distance_data.entries[index1 * distance_data.number_of_columns + index2];
+            }
+        }
     }
+
     let distance = find_distance_between_coordinates(coord1, coord2);
     let squared_distance = distance * distance;
-    DISTANCE_DATA.lock().unwrap().insert(hash_key, squared_distance);
     return squared_distance;
 }
 
@@ -189,6 +223,7 @@ fn parse_county_data(j: &json::JsonValue) -> CountyData {
         };
         return CountyData {
             coordinate,
+            index: 0, // index will be set later
             geoid,
             state,
             population
@@ -223,7 +258,8 @@ mod tests {
         let county_data_right = make_simple_county_data(5.0, 0.0, 1000);
 
         let expected = vec!(county_data_center.coordinate);
-        let counties = [county_data_left, county_data_center, county_data_right];
+        let mut counties = vec!(county_data_left, county_data_center, county_data_right);
+        update_county_indices(&mut counties);
         let closest = find_closest_location_to_all_counties(&counties, 1);
         assert_eq!(expected, closest);
     }
@@ -235,7 +271,8 @@ mod tests {
         let county_data_right = make_simple_county_data(5.0, 0.0, 5000000);
 
         let expected = vec!(county_data_right.coordinate);
-        let counties = [county_data_left, county_data_center, county_data_right];
+        let mut counties = [county_data_left, county_data_center, county_data_right];
+        update_county_indices(&mut counties);
         let closest = find_closest_location_to_all_counties(&counties, 1);
         assert_eq!(expected, closest);
     }
@@ -261,6 +298,7 @@ mod tests {
                 longitude,
                 latitude
             },
+            index: 0,
             geoid: "".to_string(),
             state: 1,
             population
