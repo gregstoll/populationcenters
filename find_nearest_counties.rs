@@ -79,9 +79,6 @@ impl DistanceCache {
                 entries.push(squared_distance);
             }
         }
-        //TODO
-        println!("Counties {:?}", coords);
-        println!("Distances {:?}", entries);
         return DistanceCache { entries, number_of_columns: coords.len() };
     }
 }
@@ -124,7 +121,12 @@ fn should_process_county(county_data: &CountyData) -> bool {
 
 // Assumes that update_county_indices has been called on counties
 fn find_closest_location_to_all_counties(counties: &[CountyData], number_of_locations: u8) -> Vec<Coordinate> {
-    let empty_vec : Vec<Coordinate> = vec!();
+    let empty_vec : Vec<(usize, Coordinate)> = vec!();
+    for (i, county) in counties.iter().enumerate() {
+        if county.index != i {
+            panic!("county at position {} has wrong index ({}) !", i, county.index);
+        }
+    }
     let distance_data = DistanceCache::new(counties.iter().map(|county| county.coordinate).collect());
 
     //TODO - unify these somewhat?
@@ -132,39 +134,38 @@ fn find_closest_location_to_all_counties(counties: &[CountyData], number_of_loca
         // TODO - unfortunate we have to build up this giant Vec
         // instead of doing things lazily
         // TODO - split this up into chunks?
-        let location_choices : Vec<Vec<Coordinate>> = counties
+        let location_choices : Vec<Vec<(usize, Coordinate)>> = counties
             .iter()
-            .map(|county| county.coordinate).combinations(usize::from(number_of_locations)).collect();
+            .map(|county| (county.index, county.coordinate)).combinations(usize::from(number_of_locations)).collect();
 
         let result = location_choices
             .par_iter()
             .map(|location_choice| (find_squared_distance_to_all_counties(&location_choice, &counties, Some(&distance_data)), location_choice))
             .reduce(|| (1./0. /*Inf*/, &empty_vec), |x, y| { if x.0 < y.0 { x } else { y }});
-        return result.1.clone();
+        return result.1.iter().map(|(_index, location)| location.clone()).collect();
     }
     else {
         let location_choices = counties
             .iter()
-            .map(|county| county.coordinate).combinations(usize::from(number_of_locations));
+            .map(|county| (county.index, county.coordinate)).combinations(usize::from(number_of_locations));
 
         let result = location_choices
             .map(|location_choice| (find_squared_distance_to_all_counties(&location_choice, &counties, Some(&distance_data)), location_choice))
             .fold((1./0. /*Inf*/, empty_vec), |x, y| { if x.0 < y.0 { x } else { y }});
-        return result.1;
+        return result.1.iter().map(|(_index, location)| location.clone()).collect();
     }
 }
 
-fn find_squared_distance_to_all_counties<'a>(locations: &Vec<Coordinate>, counties: &'a [CountyData], distance_data_option: Option<&DistanceCache>) -> f64 {
+fn find_squared_distance_to_all_counties<'a>(locations: &Vec<(usize, Coordinate)>, counties: &'a [CountyData], distance_data_option: Option<&DistanceCache>) -> f64 {
     let total = counties.iter().map(|county| find_squared_distance_to_single_county(locations, &county, distance_data_option)).sum();
     return total;
 }
 
-fn find_squared_distance_to_single_county<'a>(locations: &Vec<Coordinate>, county: &'a CountyData, distance_data_option: Option<&DistanceCache>) -> f64 {
+fn find_squared_distance_to_single_county<'a>(locations: &Vec<(usize, Coordinate)>, county: &'a CountyData, distance_data_option: Option<&DistanceCache>) -> f64 {
     let county_coordinate = &county.coordinate;
     let min_distance = locations
         .iter()
-        .enumerate()
-        .map(|(i, location)| find_squared_distance_between_coordinates(location, &county_coordinate, Some(i), Some(county.index), distance_data_option) * f64::from(county.population))
+        .map(|location| find_squared_distance_between_coordinates(&location.1, &county_coordinate, Some(location.0), Some(county.index), distance_data_option) * f64::from(county.population))
         .fold(1./0. /*Inf*/, f64::min);
     return min_distance * min_distance;
 }
@@ -287,7 +288,8 @@ mod tests {
         let county_data_right_2 = make_simple_county_data(35.0, 0.0, 1000);
 
         let expected = vec!(county_data_center_1.coordinate, county_data_center_2.coordinate);
-        let counties = [county_data_left_1, county_data_center_1, county_data_right_1, county_data_left_2, county_data_center_2, county_data_right_2];
+        let mut counties = vec!(county_data_left_1, county_data_center_1, county_data_right_1, county_data_left_2, county_data_center_2, county_data_right_2);
+        update_county_indices(&mut counties);
         let closest = find_closest_location_to_all_counties(&counties, 2);
         assert_eq!(expected, closest);
     }
