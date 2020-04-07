@@ -1,13 +1,12 @@
 use std::convert::From;
 use std::fs;
 use std::fmt;
-use std::hash::{Hash, Hasher};
 use std::time;
 use itertools::Itertools;
 use json;
 use rayon::prelude::*;
 
-static COMPUTE_IN_PARALLEL : bool = false;
+static COMPUTE_IN_PARALLEL : bool = true;
 
 #[derive(Debug)]
 pub struct CountyData {
@@ -41,23 +40,6 @@ pub struct Coordinate {
     longitude: f64,
     latitude: f64
 }
-
-// This is all a little suspicious, but we use the exact same
-// f64 values for Coordinates so it should be OK.
-impl Eq for Coordinate { }
-//    fn eq(&self, other: &Self) -> bool { }
-//        self.longitude.p }artial
-//    }
-//}
-impl Hash for Coordinate {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.longitude.to_bits().hash(state);
-        self.latitude.to_bits().hash(state);
-    }
-}
-
-//TODO - remove?
-unsafe impl Send for Coordinate {}
 
 impl fmt::Display for Coordinate {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
