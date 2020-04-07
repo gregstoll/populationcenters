@@ -113,18 +113,30 @@ fn find_closest_location_to_all_counties(counties: &[CountyData], number_of_loca
 
     //TODO - unify these somewhat?
     if COMPUTE_IN_PARALLEL {
-        // TODO - unfortunate we have to build up this giant Vec
-        // instead of doing things lazily
-        // TODO - split this up into chunks?
-        let location_choices : Vec<Vec<(usize, Coordinate)>> = counties
+        let mut location_choices = counties
             .iter()
-            .map(|county| (county.index, county.coordinate)).combinations(usize::from(number_of_locations)).collect();
-
-        let result = location_choices
-            .par_iter()
-            .map(|location_choice| (find_squared_distance_to_all_counties(&location_choice, &counties, Some(&distance_data)), location_choice))
-            .reduce(|| (1./0. /*Inf*/, &empty_vec), |x, y| { if x.0 < y.0 { x } else { y }});
-        return result.1.iter().map(|(_index, location)| location.clone()).collect();
+            .map(|county| (county.index, county.coordinate)).combinations(usize::from(number_of_locations));
+        // To use par_iter() we need a Vec<>.  But creating a Vec<> of all the possibilities would use
+        // too much memory for number_of_locations >= 3.  So process the iterator 100000 at a time.
+        // each entry in iterator takes 8 (index) + (8 + 8) (Coordinate) = 24 bytes * number_of_locations, so 100000 at a time means the
+        // Vec will use 2.4 GB * number_of_locations
+        let mut best_location_choice = (1./0. /*Inf*/, empty_vec.clone());
+        loop {
+            let current_chunk : Vec<Vec<(usize, Coordinate)>> = location_choices.by_ref().take(100000).collect();
+            if current_chunk.len() == 0 {
+                break;
+            }
+            let result = current_chunk
+                .par_iter()
+                .map(|location_choice| (find_squared_distance_to_all_counties(&location_choice, &counties, Some(&distance_data)), location_choice))
+                .reduce(|| (1./0. /*Inf*/, &empty_vec), |x, y| { if x.0 < y.0 { x } else { y }});
+            if result.0 < best_location_choice.0 {
+                //TODO this is kinda gross
+                best_location_choice.0 = result.0;
+                best_location_choice.1 = result.1.clone();
+            }
+        }
+        return best_location_choice.1.iter().map(|(_index, location)| location.clone()).collect();
     }
     else {
         let location_choices = counties
