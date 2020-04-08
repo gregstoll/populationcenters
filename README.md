@@ -3,6 +3,8 @@ Find where to put things close to most of the US's population
 
 TODO better description
 
+TODO how to get shape data, etc.
+
 This was a fun exercise in optimization.
 
 (note that all times were taken on my laptop, don't take them too seriously)
