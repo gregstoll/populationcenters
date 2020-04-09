@@ -1,6 +1,8 @@
 # populationcenters
 Find where to put things close to most of the US's population
 
+Let's say you're an employee at a major theme park company, and you're about to launch a new kind of theme park that everyone in the US is going to want to visit.  Where can you build it that minimizes the RMS distance for every person in the US?  What if you build 2 or 3 copies of the theme park?
+
 TODO better description
 
 # How to get the data
@@ -26,6 +28,8 @@ This was a fun exercise in optimization.
 ## Straightforward implementation
 I started with a straightforward implementation where we brute-force calculate the 
 distance every time.
+
+Code is at commit [9c119295](https://github.com/gregstoll/populationcenters/blob/9c119295c32ff9777d4e2ab6a3c087316a309727/find_nearest_counties.rs).
 
 - 1 county: 0.7 seconds
 - 2 counties: 1164.5 seconds (this seems about right, should be (3000/2)\*2 slower?)
