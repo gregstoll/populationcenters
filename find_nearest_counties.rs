@@ -2,6 +2,7 @@ use std::convert::From;
 use std::fs;
 use std::fmt;
 use std::time;
+use assert_approx_eq::assert_approx_eq;
 use itertools::Itertools;
 use json;
 use rayon::prelude::*;
@@ -288,6 +289,17 @@ mod tests {
         assert_eq!(expected, closest);
     }
 
+    #[test]
+    fn find_closest_location_with_real_data() {
+        let county_datas = read_county_data();
+        let closest_vec = find_closest_location_to_all_counties(&county_datas, 1);
+        assert_eq!(1, closest_vec.len());
+        let closest = closest_vec[0];
+        // This is cheating a little bit, but it's really fast to run and a good sanity check
+        assert_approx_eq!(-99.89793552425651, closest.longitude);
+        assert_approx_eq!(38.08749756724239, closest.latitude);
+    }
+ 
     fn make_simple_county_data(longitude: f64, latitude: f64, population: u32) -> CountyData {
         return CountyData {
             coordinate: Coordinate {
