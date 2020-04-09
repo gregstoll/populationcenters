@@ -13,8 +13,10 @@ npx -p shapefile shp2json tl_2019_us_county.shp > county_shapes.json
 to use `shp2json` from the [shapefile package](https://github.com/mbostock/shapefile) to convert the shapefile to GeoJSON.
 
 ## County populations
-I downloaded the county population data from [census.gov](https://data.census.gov/cedsci/table?q=population%20by%20county&g=0100000US.050000&tid=ACSDP5Y2018.DP05&hidePreview=true)  This included 
-TODO how to get shape data, etc.
+I downloaded the county population data from [census.gov](https://data.census.gov/cedsci/table?q=population%20by%20county&g=0100000US.050000&tid=ACSDP5Y2018.DP05&hidePreview=true) (note that this page is pretty memory/CPU-intensive on my browser; it may be better to go to [data.census.gov and search for "population by county"](https://data.census.gov/cedsci/all?q=population%20by%20county&hidePreview=false&tid=ACSDP1Y2018.DP05). I took the latest population column for each county and saved that to [census_county_data.tsv](https://github.com/gregstoll/populationcenters/blob/master/census_county_data.tsv).
+
+## Merging them
+[calculate_centroids_and_merge_population.js](https://github.com/gregstoll/populationcenters/blob/master/calculate_centroids_and_merge_population.js) reads in these two input files and joins them together (as they both have GeoID's for counties) into [data/county_centroids.json](https://github.com/gregstoll/populationcenters/blob/master/data/county_centroids.json).  This is the only input that [find_nearest_counties.rs](https://github.com/gregstoll/populationcenters/blob/master/find_nearest_counties.rs) needs.
 
 This was a fun exercise in optimization.
 
