@@ -12,6 +12,8 @@ npx -p shapefile shp2json tl_2019_us_county.shp > county_shapes.json
 ```
 to use `shp2json` from the [shapefile package](https://github.com/mbostock/shapefile) to convert the shapefile to GeoJSON.
 
+## County populations
+I downloaded the county population data from [census.gov](https://data.census.gov/cedsci/table?q=population%20by%20county&g=0100000US.050000&tid=ACSDP5Y2018.DP05&hidePreview=true)  This included 
 TODO how to get shape data, etc.
 
 This was a fun exercise in optimization.
