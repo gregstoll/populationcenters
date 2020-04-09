@@ -18,11 +18,11 @@ I downloaded the county population data from [census.gov](https://data.census.go
 ## Merging them
 [calculate_centroids_and_merge_population.js](https://github.com/gregstoll/populationcenters/blob/master/calculate_centroids_and_merge_population.js) reads in these two input files and joins them together (as they both have GeoID's for counties) into [data/county_centroids.json](https://github.com/gregstoll/populationcenters/blob/master/data/county_centroids.json).  This is the only input that [find_nearest_counties.rs](https://github.com/gregstoll/populationcenters/blob/master/find_nearest_counties.rs) needs.
 
+# Implementation
 This was a fun exercise in optimization.
 
 (note that all times were taken on my laptop, don't take them too seriously)
 
-# Implementation
 ## Straightforward implementation
 I started with a straightforward implementation where we brute-force calculate the 
 distance every time.
