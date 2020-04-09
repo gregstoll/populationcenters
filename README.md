@@ -3,12 +3,22 @@ Find where to put things close to most of the US's population
 
 TODO better description
 
+# How to get the data
+## County centroids
+First I needed to get the geographic center of each county in the US.  From [census.gov's 
+TIGER/Line Shapefiles page](https://www.census.gov/cgi-bin/geo/shapefiles/index.php) I downloaded a shapefile (.shp) for all the counties (and equivalents) in the US.  Then I ran
+```
+npx -p shapefile shp2json tl_2019_us_county.shp > county_shapes.json
+```
+to use `shp2json` from the [shapefile package](https://github.com/mbostock/shapefile) to convert the shapefile to GeoJSON.
+
 TODO how to get shape data, etc.
 
 This was a fun exercise in optimization.
 
 (note that all times were taken on my laptop, don't take them too seriously)
 
+# Implementation
 ## Straightforward implementation
 I started with a straightforward implementation where we brute-force calculate the 
 distance every time.
