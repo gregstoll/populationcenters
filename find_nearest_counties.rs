@@ -52,13 +52,12 @@ struct DistanceCache {
     number_of_columns: usize
 }
 impl DistanceCache {
-    fn new(coords: Vec<Coordinate>) -> DistanceCache {
+    fn new(coords: Vec<(Coordinate, u32)>) -> DistanceCache {
         let mut entries: Vec<f64> = Vec::with_capacity(coords.len() * coords.len());
-        for (_, coord1) in coords.iter().enumerate() {
-            for (_, coord2) in coords.iter().enumerate() {
-                let squared_distance = find_squared_distance_between_coordinates(&coord1, &coord2, None, None, None);
-                // TODO Does twice as much work as necessary
-                entries.push(squared_distance);
+        for (_, (coord1, _)) in coords.iter().enumerate() {
+            for (_, (coord2, pop2)) in coords.iter().enumerate() {
+                let weighted_squared_distance = find_weighted_squared_distance_between_coordinates(&coord1, &coord2, None, None, Some(*pop2), None);
+                entries.push(weighted_squared_distance);
             }
         }
         return DistanceCache { entries, number_of_columns: coords.len() };
@@ -109,7 +108,7 @@ fn find_closest_location_to_all_counties(counties: &[CountyData], number_of_loca
             panic!("county at position {} has wrong index ({}) !", i, county.index);
         }
     }
-    let distance_data = DistanceCache::new(counties.iter().map(|county| county.coordinate).collect());
+    let distance_data = DistanceCache::new(counties.iter().map(|county| (county.coordinate, county.population)).collect());
 
     //TODO - unify these somewhat?
     if COMPUTE_IN_PARALLEL {
@@ -159,16 +158,17 @@ fn find_squared_distance_to_single_county<'a>(locations: &Vec<(usize, Coordinate
     let county_coordinate = &county.coordinate;
     let min_distance = locations
         .iter()
-        .map(|location| find_squared_distance_between_coordinates(&location.1, &county_coordinate, Some(location.0), Some(county.index), distance_data_option) * f64::from(county.population))
+        .map(|location| find_weighted_squared_distance_between_coordinates(&location.1, &county_coordinate, Some(location.0), Some(county.index), None, distance_data_option))
         .fold(1./0. /*Inf*/, f64::min);
     return min_distance * min_distance;
 }
 
-fn find_squared_distance_between_coordinates(
+fn find_weighted_squared_distance_between_coordinates(
     coord1: &Coordinate,
     coord2: &Coordinate,
     index1_option: Option<usize>,
     index2_option: Option<usize>,
+    weight: Option<u32>,
     distance_data_option: Option<&DistanceCache>) -> f64 {
     if let Some(distance_data) = distance_data_option {
         if let Some(index1) = index1_option {
@@ -180,7 +180,7 @@ fn find_squared_distance_between_coordinates(
 
     let distance = find_distance_between_coordinates(coord1, coord2);
     let squared_distance = distance * distance;
-    return squared_distance;
+    return squared_distance * weight.expect("Weight needs to be specified if no distance_data_cache!") as f64;
 }
 
 /// Find the distance in km between two coordinates
