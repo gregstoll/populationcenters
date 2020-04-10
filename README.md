@@ -72,9 +72,14 @@ Code is at revision [f8a0cd36](https://github.com/gregstoll/populationcenters/bl
 - 1 county: 0.7 seconds
 - 2 counties: 372 seconds (6.2 minutes) - this is ~3x faster than the previous fastest non-parallel version!
 
-This was cool because I could see all my CPUs get pegged at 100% :-)
-
 ## Memoize squared distance between counties in a Vec<> (parallel)
+Per the note above, I wasn't able to run 
+
+I also ran this on my desktop machine (an Intel 6 core i5-8600K at 3.6Ghz)
+- 1 county: 
+- 2 counties: 
+
+This was cool because I could see all my CPUs get pegged at 100% :-)
 
 TODO - desktop timing?
 
