@@ -57,10 +57,17 @@ Code is at revision [ad7aa410](https://github.com/gregstoll/populationcenters/bl
 - 2 counties: over an hour before I gave up
 
 ## Memoize squared distance between counties in a non-static HashMap
-Memoize squared distance between counties in a HashMap
-1 county: 4.06 seconds (uh-oh)
-2 counties: ...
+I addressed the static part by initializing the HashMap and passing down a non-mutable reference when we do the calculations.  This meant it didn't need to be wrapped in a Mutex anymore.
 
-had to put in a Mutex, get rid of that by not making it static
+Unfortunately I didn't commit this code.
 
-next try using a big Array?
+- 1 county: 7.8 seconds (yikes!)
+- 2 counties: over an hour before I gave up
+
+## Memoize squared distance between counties in a Vec<>
+The HashMap is actually more powerful than we need here - if we just use the index of each county as a "key", we can keep all the distances in a Vec<> and look them up much more easily.
+
+Code is at revision [f8a0cd36](https://github.com/gregstoll/populationcenters/blob/f8a0cd36ac03d077c57ccad54bf910351342fcd5/find_nearest_counties.rs)
+
+- 1 county: 0.7 seconds
+- 2 counties: 372 seconds (6.2 minutes) - this is ~3x faster than the previous fastest non-parallel version!
