@@ -71,3 +71,11 @@ Code is at revision [f8a0cd36](https://github.com/gregstoll/populationcenters/bl
 
 - 1 county: 0.7 seconds
 - 2 counties: 372 seconds (6.2 minutes) - this is ~3x faster than the previous fastest non-parallel version!
+This was cool because I could see all my CPUs get pegged at 100% :-)
+
+
+TODO - desktop timing?
+
+TODO - chunk Vec's
+
+TODO - make DistanceCache weighted by population
