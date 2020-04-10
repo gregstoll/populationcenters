@@ -20,7 +20,7 @@ I downloaded the county population data from [census.gov](https://data.census.go
 ## Merging them
 [calculate_centroids_and_merge_population.js](https://github.com/gregstoll/populationcenters/blob/master/calculate_centroids_and_merge_population.js) reads in these two input files and joins them together (as they both have GeoID's for counties) into [data/county_centroids.json](https://github.com/gregstoll/populationcenters/blob/master/data/county_centroids.json).  This is the only input that [find_nearest_counties.rs](https://github.com/gregstoll/populationcenters/blob/master/find_nearest_counties.rs) needs.
 
-# Implementation
+# Implementation and optimization
 This was a fun exercise in optimization.
 
 Unless otherwise noted, all times were taken on my laptop with a 4-core Intel core i7-8650U 1.9Ghz.  I just ran each of these once or twice, so don't take the times too seriously!
@@ -64,15 +64,17 @@ Unfortunately I didn't commit this code.
 - 1 county: 7.8 seconds (yikes!)
 - 2 counties: over an hour before I gave up
 
-## Memoize squared distance between counties in a Vec<>
+## Memoize squared distance between counties in a Vec<> (non-parallel)
 The HashMap is actually more powerful than we need here - if we just use the index of each county as a "key", we can keep all the distances in a Vec<> and look them up much more easily.
 
 Code is at revision [f8a0cd36](https://github.com/gregstoll/populationcenters/blob/f8a0cd36ac03d077c57ccad54bf910351342fcd5/find_nearest_counties.rs)
 
 - 1 county: 0.7 seconds
 - 2 counties: 372 seconds (6.2 minutes) - this is ~3x faster than the previous fastest non-parallel version!
+
 This was cool because I could see all my CPUs get pegged at 100% :-)
 
+## Memoize squared distance between counties in a Vec<> (parallel)
 
 TODO - desktop timing?
 
