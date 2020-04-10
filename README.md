@@ -23,17 +23,16 @@ I downloaded the county population data from [census.gov](https://data.census.go
 # Implementation
 This was a fun exercise in optimization.
 
-(note that all times were taken on my laptop, don't take them too seriously)
+Unless otherwise noted, all times were taken on my laptop with a 4-core Intel core i7-8650U 1.9Ghz.  I just ran each of these once or twice, so don't take the times too seriously!
 
 ## Straightforward implementation
-I started with a straightforward implementation where we brute-force calculate the 
-distance every time.
+I started with a straightforward implementation where we brute-force calculate the distance every time.
 
 Code is at revision [7ad3c5a3](https://github.com/gregstoll/populationcenters/blob/7ad3c5a37e43508f324cd03a6e77760dfef2af9c/find_nearest_counties.rs).
 
 - 1 county: 0.7 seconds
-- 2 counties: 1164.5 seconds (this seems about right, should be (3000/2)\*2 slower?)
-- 3 counties: didn't even try it
+- 2 counties: 1164.5 seconds ~= 19.5 minutes (this seems about right, should be around (3000/2)\*2 times longer)
+- 3 counties: didn't even try it, seems like it would have taken around (3000/3)\*(3/2) longer, which is around 40 days!
 
 ## Parallel implementation
 This is an [embarrassingly parallel](https://en.wikipedia.org/wiki/Embarrassingly_parallel) problem, and I used [Rayon](https://github.com/rayon-rs/rayon) to parallelize it.
@@ -41,7 +40,7 @@ This is an [embarrassingly parallel](https://en.wikipedia.org/wiki/Embarrassingl
 Code is at revision [37c03437](https://github.com/gregstoll/populationcenters/blob/37c03437ca92114702dab6e40c2376fdcf102f9c/find_nearest_counties.rs).
 
 - 1 county: 0.1 seconds
-- 2 counties: 343.5 seconds (~3.4x speedup for an 4 core machine)
+- 2 counties: 343.5 seconds (~3.4x speedup over the non-parallel version for an 4 core machine)
 - 3 counties: this would have used a ton of memory, because the way it was implemented would require a giant Vec for all the possible combinations.  More on this later.
 
 Memoize squared distance between counties in a HashMap
