@@ -9,6 +9,16 @@
             fill: blue;
             fill-opacity: 0.25;
         }
+        circle.countyCircle.destinationCircle {
+            fill: red;
+            fill-opacity: 1.0;
+        }
+        div.mapDiv {
+          width: 1000px;
+          height: 800px;
+          margin-bottom: -160px;
+          margin-top: -160px;
+        }
     </style>
     <!-- <link href="/dist/main.bundle.css" rel="stylesheet"> -->
   </head>
@@ -17,7 +27,10 @@
 
     <div id="root" class="center-align"></div>
 
-    <div id="map" style="width: 1000px; height: 800px;"></div>
+    <div id="map" class="mapDiv"></div>
+    <div id="map1" class="mapDiv"></div>
+    <div id="map2" class="mapDiv"></div>
+    <div id="map3" class="mapDiv"></div>
 
     <script type="text/javascript" src="/dist/app.bundle.js"></script>
   </body>
