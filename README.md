@@ -93,5 +93,19 @@ So I also ran this on my desktop machine (an Intel 6 core i5-8600K at 3.6Ghz)
 This was cool because I could see all my CPUs get pegged at 100% :-)  It was also neat to see the desktop machine be significantly faster, because in the non-parallel case it's a little slower despite having a higher clock speed.  (I guess i7 versus i5 makes a difference!)  It was also exciting to finally get the 3 county results!
 
 ## Memoize squared weighted distance between counties in a Vec<> (parallel)
+We can actually cache the distance between counties weighted by one of the county's populations to remove a few multiplies from each combination calculation.
 
-TODO - make DistanceCache weighted by population
+Code is at revision [1847c336](https://github.com/gregstoll/populationcenters/blob/1847c3361cbd8fa04442e7bbf8775b954c6c2060/find_nearest_counties.rs)
+
+- 1 county: 0.3 seconds
+- 2 counties: 28 seconds - wow!
+
+Desktop timings
+- 1 county: 0.5 seconds
+- 2 counties: 18 seconds(!!)
+- 3 counties: 20500 seconds ~= 5.7 hours
+
+## Future optimizations
+So on my desktop machine for 3 counties, saving 3 multiplies per iteration speeds things up by more than 25%!  I think this points to one of the challenges here - each iteration is just a few array lookups and multiplications, and a comparison to see if it's the new best one.  The implementation of the comparison is a little weird, maybe extra work is being done there?
+
+The other angle to approach this from is to try to reduce the number of combinations.  We could probably rule out two counties in the same combination that are very close together, but we'd have to figure out how close things they have to be before rejecting them.  And  of course you have to be careful that the check isn't too expensive so it doesn't end up helping!
