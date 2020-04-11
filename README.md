@@ -21,7 +21,11 @@ I downloaded the county population data from [census.gov](https://data.census.go
 [calculate_centroids_and_merge_population.js](https://github.com/gregstoll/populationcenters/blob/master/calculate_centroids_and_merge_population.js) reads in these two input files and joins them together (as they both have GeoID's for counties) into [data/county_centroids.json](https://github.com/gregstoll/populationcenters/blob/master/data/county_centroids.json).  This is the only input that [find_nearest_counties.rs](https://github.com/gregstoll/populationcenters/blob/master/find_nearest_counties.rs) needs.
 
 # Implementation and optimization
-This was a fun exercise in optimization.
+We assume that the entire population of a county is located at its center, so to do the calculation we simply try every combination of _n_ counties and for each one, iterate over every county in the country and calculate the distance squared (to the closest member of the combination) multiplied by the population of the county.
+
+(I'm not sure if we should be squaring the population of the county, too?)
+
+This was a fun exercise in optimization!
 
 Unless otherwise noted, all times were taken on my laptop with a 4-core Intel core i7-8650U 1.9Ghz.  I just ran each of these once or twice, so don't take the times too seriously!
 
@@ -73,13 +77,13 @@ Code is at revision [f8a0cd36](https://github.com/gregstoll/populationcenters/bl
 - 2 counties: 372 seconds (6.2 minutes) - this is ~3x faster than the previous fastest non-parallel version!
 
 ## Memoize squared distance between counties in a Vec<> (parallel)
-Per the note above, I wasn't able to run 
+Per the note above (under "Parallel implementation"), I wasn't able to run 
 
 I also ran this on my desktop machine (an Intel 6 core i5-8600K at 3.6Ghz)
 - 1 county: 
 - 2 counties: 
 
-This was cool because I could see all my CPUs get pegged at 100% :-)
+This was cool because I could see all my CPUs get pegged at 100% :-)  It was also neat to see the desktop machine be significantly faster, because in the non-parallel case it's a little slower despite having a higher clock speed.  (I guess i7 versus i5 makes a difference!)
 
 TODO - desktop timing?
 
