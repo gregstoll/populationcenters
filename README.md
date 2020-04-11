@@ -1,4 +1,7 @@
 # populationcenters
+- [How to get the data](#how-to-get-the-data)
+- [Implementation and optimization](#implementation-and-optimization)
+
 Find where to put things close to most of the US's population
 
 Let's say you're an employee at a major theme park company, and you're about to launch a new kind of theme park that everyone in the US is going to want to visit.  Where can you build it that minimizes the root mean squared distance for every person in the US?  What if you build 2 or 3 copies of the theme park?
