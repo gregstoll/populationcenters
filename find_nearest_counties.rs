@@ -2,7 +2,6 @@ use std::convert::From;
 use std::fs;
 use std::fmt;
 use std::time;
-use assert_approx_eq::assert_approx_eq;
 use itertools::Itertools;
 use json;
 use rayon::prelude::*;
@@ -233,6 +232,7 @@ fn parse_county_data(j: &json::JsonValue) -> CountyData {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use assert_approx_eq::assert_approx_eq;
 
     #[test]
     fn find_distance_between_london_and_paris() {
