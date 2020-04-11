@@ -77,16 +77,21 @@ Code is at revision [f8a0cd36](https://github.com/gregstoll/populationcenters/bl
 - 2 counties: 372 seconds (6.2 minutes) - this is ~3x faster than the previous fastest non-parallel version!
 
 ## Memoize squared distance between counties in a Vec<> (parallel)
-Per the note above (under "Parallel implementation"), I wasn't able to run 
+Per the note above (under "Parallel implementation"), I wasn't able to run the parallel implementation for 3 counties because it required keeping the whole Vec<> of combinations in memory at a time (instead of evaluating them lazily). This would have required around (3100 choose 3) * 3 * (8 + 8) bytes of memory, which is over 238 GB.  So we can just take the combinations 100000 at a time, find the best one in parallel, and see if that's our best overall one or not.
 
-I also ran this on my desktop machine (an Intel 6 core i5-8600K at 3.6Ghz)
-- 1 county: 
-- 2 counties: 
+Code is at revision [2c96ccd1](https://github.com/gregstoll/populationcenters/blob/2c96ccd159118cbe562aacd93a93c361b8f10b8e/find_nearest_counties.rs)
 
-This was cool because I could see all my CPUs get pegged at 100% :-)  It was also neat to see the desktop machine be significantly faster, because in the non-parallel case it's a little slower despite having a higher clock speed.  (I guess i7 versus i5 makes a difference!)
+- 1 county: 0.5 seconds
+- 2 counties: 72 seconds - hooray!
+- 3 counties: I believe this would have finished, but I was worried about running my laptop at 100% CPU overnight since I need it to work from home right now.
 
-TODO - desktop timing?
+So I also ran this on my desktop machine (an Intel 6 core i5-8600K at 3.6Ghz)
+- 1 county: 0.5 seconds
+- 2 counties: 25 seconds(!)
+- 3 counties: 28343 seconds ~= 8 hours
 
-TODO - chunk Vec's
+This was cool because I could see all my CPUs get pegged at 100% :-)  It was also neat to see the desktop machine be significantly faster, because in the non-parallel case it's a little slower despite having a higher clock speed.  (I guess i7 versus i5 makes a difference!)  It was also exciting to finally get the 3 county results!
+
+## Memoize squared weighted distance between counties in a Vec<> (parallel)
 
 TODO - make DistanceCache weighted by population
