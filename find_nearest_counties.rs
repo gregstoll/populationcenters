@@ -23,6 +23,10 @@ fn main() {
         }
         Mode::CountClosestPopulation => {
             println!("Counting population");
+            println!("2 locations: {:?}", count_closest_population(&county_datas, &["47185", "32023"]));
+            println!("3 locations: {:?}", count_closest_population(&county_datas, &["39155", "32023", "22087"]));
+            println!("2 non-squared locations: {:?}", count_closest_population(&county_datas, &["06071", "21207"]));
+            println!("3 non-squared locations: {:?}", count_closest_population(&county_datas, &["42073", "06071", "22063"]));
         }
     }
     println!("took {} secs", time::Instant::now().duration_since(start_time).as_secs_f32());
@@ -38,6 +42,38 @@ fn get_mode(args: Vec<String>) -> Mode {
         return Mode::CountClosestPopulation;
     }
     return Mode::FindClosest;
+}
+fn count_closest_population(counties: &[CountyData], geoids: &[&str]) -> Vec<u32> {
+    let mut closest_count = Vec::new();
+    let mut coords = Vec::new();
+    for geoid in geoids.iter() {
+        closest_count.push(0);
+        coords.push(single_item(&mut counties.iter().filter(|county| county.geoid == *geoid)).coordinate);
+    }
+    for county in counties.iter() {
+        let min_index_and_distance = coords
+            .iter()
+            .enumerate()
+            .map(|location| (
+                location.0,
+                find_weighted_squared_distance_between_coordinates(&location.1, &county.coordinate, None, None, Some(1), None)))
+            .fold((coords.len(), 1./0. /*Inf*/), |x, y| { if x.1 < y.1 { x } else { y }});
+        closest_count[min_index_and_distance.0] += county.population;
+    }
+    return closest_count;
+}
+
+fn single_item<I, T>(it: &mut I) -> T
+where 
+    I: Iterator<Item=T>
+{
+    if let Some(item) = it.next() {
+        if let None = it.next() {
+            return item;
+        }
+        panic!("Too many items in iterator!");
+    }
+    panic!("No items in iterator!");
 }
 
 #[derive(Debug)]
