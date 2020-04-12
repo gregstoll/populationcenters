@@ -348,6 +348,23 @@ mod tests {
     }
 
     #[test]
+    fn find_closest_population_with_2_split_locations_different_population() {
+        let county_data_left_1 = make_simple_county_data(-5.0, 0.0, 1000);
+        let county_data_center_1 = make_county_data_with_geoid(0.0, 0.0, 2000, "L");
+        let county_data_right_1 = make_simple_county_data(5.0, 0.0, 8000);
+        let county_data_left_2 = make_simple_county_data(25.0, 0.0, 4000);
+        let county_data_center_2 = make_county_data_with_geoid(30.0, 0.0, 16000, "R");
+        let county_data_right_2 = make_simple_county_data(35.0, 0.0, 32000);
+
+        let expected = vec!(11000, 52000);
+        let mut counties = vec!(county_data_left_1, county_data_center_1, county_data_right_1, county_data_left_2, county_data_center_2, county_data_right_2);
+        update_county_indices(&mut counties);
+        let closest_populations = count_closest_population(&counties, &["L", "R"]);
+        assert_eq!(expected, closest_populations);
+    }
+
+
+    #[test]
     fn find_closest_location_with_real_data() {
         let county_datas = read_county_data();
         let closest_vec = find_closest_location_to_all_counties(&county_datas, 1);
@@ -366,6 +383,19 @@ mod tests {
             },
             index: 0,
             geoid: "".to_string(),
+            state: 1,
+            population
+        };
+    }
+
+    fn make_county_data_with_geoid(longitude: f64, latitude: f64, population: u32, geoid: &str) -> CountyData {
+        return CountyData {
+            coordinate: Coordinate {
+                longitude,
+                latitude
+            },
+            index: 0,
+            geoid: geoid.to_string(),
             state: 1,
             population
         };
