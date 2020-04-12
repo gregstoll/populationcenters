@@ -3,8 +3,11 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sample map</title>
+    <title>Population centers</title>
     <style>
+        body {
+          max-width: 800px;
+        }
         circle.countyCircle {
             fill: blue;
             fill-opacity: 0.25;
@@ -14,7 +17,7 @@
             fill-opacity: 1.0;
         }
         div.mapDiv {
-          /* 975 x 610 scaled down to 0.6 */
+          /* 975 x 610 scaled at 0.6 */
           width: 600px;
           height: 400px;
         }
@@ -22,14 +25,38 @@
     <!-- <link href="/dist/main.bundle.css" rel="stylesheet"> -->
   </head>
   <body>
-    <h2 class="center-align">Map</h2>
+    <h2 style="margin-left: 100px;">Population centers</h2>
+    <p><a href="#about">About this project</a></p>
+    <p>Let's say you're an employee at a major theme park company, and you're about to launch a new
+       kind of theme park that everyone in the US is going to want to visit.
+       Where can you build it that minimizes the root mean squared distance for every person
+        in the US? What if you build 2 or 3 copies of the theme park?</p>
 
-    <div id="root" class="center-align"></div>
-
+    <p>Here's a map of the US where every county has a circle whose area proportional to its population:</p>
     <div id="map" class="mapDiv"></div>
+    <p>For minimizing the squared distance for each person, if you can only build in one location you should choose
+      <b>Hodgeman County, Kansas</b>, a county with just under 2000 people.  Unsurprisingly it splits the difference between
+      the west coast and the east coast, and is not too far from Texas and Chicago.
+    </p>
     <div id="map1" class="mapDiv"></div>
+    <p>If you can build two identical theme parks, you're going to want to build in <b>Nye County, Nevada</b> and
+      <b>White County, Tennessee</b>.  The Tennessee location kind of makes sense (sort of the center of New York City,
+      Chicago, Texas, and Florida?), but I was surprised the Nevada location wasn't closer to Los Angeles.  Maybe Seattle
+      and San Francisco pull it further north?</p>
     <div id="map2" class="mapDiv"></div>
+    <p>If you have the cash for three identical theme parks, one should still be in <b>Nye County, Nevada</b> (neat!), and
+      the other two should be in <b>Trumbull County, Ohio</b> and <b>St. Bernard Parish, Louisiana</b>.  The Ohio location
+      is basically halfway between New York City and Chicago, and the Louisiana one does a decent job of covering Texas
+      and Florida.</p>
     <div id="map3" class="mapDiv"></div>
+    <p id="about"><b>About this project:</b> Find the code (with more technical discussion) at <a href="https://github.com/gregstoll/populationcenters">GitHub</a>
+      <br></a>There are a lot of assumptions here.  For one thing, we're assuming every person in a county lives at the geographic center of
+      the county - probably wouldn't have a huge effect on the numbers, but who knows.  For another thing, we're only considering these
+      geographic centers as candidates for locations.</p>
+    <p>I considered using some kind of custom distance function that acknowledged that once you get more than, say, 200 miles away, it's
+      a big jump because it's probably an all-day trip to get there.  Once you get over, say 300 miles, most people are probably
+      travelling by plane to get there, so it's not too much harder to go a bit further.</p>
+    <p>Obviously if you were doing this for real, you'd care a lot about available land and close highways and big airports!</p>
     <hr>
     <div id="map1NoSquare" class="mapDiv"></div>
     <div id="map2NoSquare" class="mapDiv"></div>
