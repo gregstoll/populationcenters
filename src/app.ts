@@ -54,6 +54,15 @@ interface HasFeatures {
     drawMap('#map1', getCountyCentroidsFromCoordList(oneLocation));
     drawMap('#map2', getCountyCentroidsFromCoordList(twoLocations));
     drawMap('#map3', getCountyCentroidsFromCoordList(threeLocations));
+    const oneLocationNoSquare = [["-101.31204687704125", "37.19223236042145"]];
+    const twoLocationsNoSquare = [["-116.17665105622207", "34.84170884534611"],
+                                  ["-85.05876112828659", "36.99099027516325"]];
+    const threeLocationsNoSquare = [["-80.33472080507312", "40.99117132468833"],
+                                    ["-116.17665105622207", "34.84170884534611"],
+                                    ["-90.72780147927472", "30.440047525709172"]];
+    drawMap('#map1NoSquare', getCountyCentroidsFromCoordList(oneLocationNoSquare));
+    drawMap('#map2NoSquare', getCountyCentroidsFromCoordList(twoLocationsNoSquare));
+    drawMap('#map3NoSquare', getCountyCentroidsFromCoordList(threeLocationsNoSquare));
 
     function getCountyCentroidsFromCoordList(longLats: Array<Array<string>>) : CountyCentroid[] {
         return longLats.map(latLong => getCountyCentroidsFromCoords(latLong[0], latLong[1]));
