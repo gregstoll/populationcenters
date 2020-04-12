@@ -74,9 +74,11 @@ interface HasFeatures {
     }
 
     function drawMap(mapDivId: string, destinations?: CountyCentroid[]) {
+        console.log("Drawing " + mapDivId + " with geoids " + destinations?.map(c => c.geoid).join(", "));
         let mapDiv = d3.select(mapDivId);
-        mapDiv.attr('style', 'transform: scale(0.6)');
-        let svg = mapDiv.append('svg')
+        let innerMapDiv = mapDiv.append('div');
+        innerMapDiv.attr('style', 'transform: scale(0.6); transform-origin: top;');
+        let svg = innerMapDiv.append('svg')
             .attr('width', width)
             .attr('height', height);
 
