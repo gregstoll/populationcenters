@@ -1,4 +1,5 @@
 use std::convert::From;
+use std::env;
 use std::fs;
 use std::fmt;
 use std::time;
@@ -7,6 +8,37 @@ use json;
 use rayon::prelude::*;
 
 static COMPUTE_IN_PARALLEL : bool = true;
+
+fn main() {
+    let args: Vec<String> = env::args().collect();
+    let mode = get_mode(args);
+    let start_time = time::Instant::now();
+    let county_datas = read_county_data();
+    println!("Got {} counties", county_datas.len());
+    match mode {
+        Mode::FindClosest => {
+            println!("{:?}", find_closest_location_to_all_counties(&county_datas, 1));
+            println!("{:?}", find_closest_location_to_all_counties(&county_datas, 2));
+            //println!("{:?}", find_closest_location_to_all_counties(&county_datas, 3));
+        }
+        Mode::CountClosestPopulation => {
+            println!("Counting population");
+        }
+    }
+    println!("took {} secs", time::Instant::now().duration_since(start_time).as_secs_f32());
+}
+
+enum Mode {
+    FindClosest,
+    CountClosestPopulation
+}
+
+fn get_mode(args: Vec<String>) -> Mode {
+    if args.len() == 2 && args[1].to_ascii_lowercase() == "countclosestpopulation" {
+        return Mode::CountClosestPopulation;
+    }
+    return Mode::FindClosest;
+}
 
 #[derive(Debug)]
 pub struct CountyData {
@@ -62,16 +94,6 @@ impl DistanceCache {
         }
         return DistanceCache { entries, number_of_columns: coords.len() };
     }
-}
-
-fn main() {
-    let start_time = time::Instant::now();
-    let county_datas = read_county_data();
-    println!("Got {} counties", county_datas.len());
-    println!("{:?}", find_closest_location_to_all_counties(&county_datas, 1));
-    println!("{:?}", find_closest_location_to_all_counties(&county_datas, 2));
-    //println!("{:?}", find_closest_location_to_all_counties(&county_datas, 3));
-    println!("took {} secs", time::Instant::now().duration_since(start_time).as_secs_f32());
 }
 
 
