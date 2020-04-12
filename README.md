@@ -1,6 +1,7 @@
 # populationcenters
 - [How to get the data](#how-to-get-the-data)
 - [Implementation and optimization](#implementation-and-optimization)
+- [Future ideas](#future-ideas)
 
 Find where to put things close to most of the US's population
 
@@ -108,7 +109,14 @@ Desktop timings
 - 2 counties: 18 seconds(!!)
 - 3 counties: 20500 seconds ~= 5.7 hours
 
+# Future ideas
 ## Future optimizations
 So on my desktop machine for 3 counties, saving 3 multiplies per iteration speeds things up by more than 25%!  I think this points to one of the challenges here - each iteration is just a few array lookups and multiplications, and a comparison to see if it's the new best one.  The implementation of the comparison is a little weird, maybe extra work is being done there?
 
 The other angle to approach this from is to try to reduce the number of combinations.  We could probably rule out two counties in the same combination that are very close together, but we'd have to figure out how close things they have to be before rejecting them.  And  of course you have to be careful that the check isn't too expensive so it doesn't end up helping!
+
+I have a hard time seeing that this would make calculating 4 counties feasible - it should take around `(3100/4)*(4/3)` or just over 1000 times longer than 3 counties, which on my desktop machine would take over half a year!  But maybe some improvements and adding the ability to save/load progress would work?
+
+## More features
+- Different cost functions (instead of just distance squared)
+- Add a slider to control opacity of county circles
