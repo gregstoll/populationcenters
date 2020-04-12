@@ -208,6 +208,7 @@ fn find_closest_location_to_all_counties(counties: &[CountyData], number_of_loca
 }
 
 fn find_squared_distance_to_all_counties<'a>(locations: &Vec<(usize, Coordinate)>, counties: &'a [CountyData], distance_data_option: Option<&DistanceCache>) -> f64 {
+    // TODO - could filter out some of these and early return Inf
     let total = counties.iter().map(|county| find_squared_distance_to_single_county(locations, &county, distance_data_option)).sum();
     return total;
 }
