@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Find where to put things close to most of the US's population",
   "main": "src/app.js",
+  "homepage": "https://gregstoll.com/populationcenters",
   "scripts": {
     "start": "webpack-dev-server --open",
     "build": "webpack -p --config webpack.prod.config.js --hide-modules",
