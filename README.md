@@ -81,7 +81,9 @@ Code is at revision [f8a0cd36](https://github.com/gregstoll/populationcenters/bl
 - 2 counties: 372 seconds (6.2 minutes) - this is ~3x faster than the previous fastest non-parallel version!
 
 ## Memoize squared distance between counties in a Vec<> (parallel)
-Per the note above (under "Parallel implementation"), I wasn't able to run the parallel implementation for 3 counties because it required keeping the whole Vec<> of combinations in memory at a time (instead of evaluating them lazily). This would have required around (3100 choose 3) * 3 * (8 + 8) bytes of memory, which is over 238 GB.  So we can just take the combinations 100000 at a time, find the best one in parallel, and see if that's our best overall one or not.
+Per the note above (under "Parallel implementation"), I wasn't able to run the parallel implementation for 3 counties because it required keeping the whole Vec<> of combinations in memory at a time (instead of evaluating them lazily). This would have required around (3100 choose 3) * 3 * (8 + 8) bytes of memory, which is over 238 GB.
+
+So instead we can just take the combinations 100000 at a time, find the best one in parallel, and see if that's our best overall one or not.
 
 Code is at revision [2c96ccd1](https://github.com/gregstoll/populationcenters/blob/2c96ccd159118cbe562aacd93a93c361b8f10b8e/find_nearest_counties.rs)
 
