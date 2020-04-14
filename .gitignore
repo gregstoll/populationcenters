@@ -4,6 +4,7 @@ tl_2019*
 PEP_2018*
 county_shapes.json
 *.bundle.*
+**/.*swp
 
 #Added by cargo
 #
