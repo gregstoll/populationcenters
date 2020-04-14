@@ -122,3 +122,4 @@ I have a hard time seeing that this would make calculating 4 counties feasible -
 ## More features
 - Different cost functions (instead of just distance squared)
 - Add a slider to control opacity of county circles
+- Look into [k-means clustering](https://towardsdatascience.com/clustering-the-us-population-observation-weighted-k-means-f4d58b370002) - implement in Rust?
