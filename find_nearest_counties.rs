@@ -76,7 +76,7 @@ where
     panic!("No items in iterator!");
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CountyData {
     coordinate: Coordinate,
     index: usize,
@@ -88,18 +88,6 @@ pub struct CountyData {
 impl fmt::Display for CountyData {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}, index: {}, geoid: {}, state: {}, population: {}", self.coordinate, self.index, self.geoid, self.state, self.population)
-    }
-}
-
-impl Clone for CountyData {
-    fn clone(&self) -> CountyData {
-        CountyData {
-            coordinate: self.coordinate,
-            index: self.index,
-            geoid: self.geoid.clone(),
-            state: self.state,
-            population: self.population
-        }
     }
 }
 
@@ -134,7 +122,7 @@ impl DistanceCache {
 
 
 fn read_county_data() -> Vec::<CountyData> {
-    let contents = fs::read_to_string("data/county_centroids.json").expect("Failed to open county_centroids");
+    let contents = fs::read_to_string("public/data/county_centroids.json").expect("Failed to open county_centroids");
     let county_parsed_json = json::parse(&contents).expect("Failed to parse JSON");
     let mut county_datas : Vec::<CountyData> =
         county_parsed_json.members().map(|value| parse_county_data(value)).filter(should_process_county).collect();
