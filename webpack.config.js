@@ -1,10 +1,10 @@
 const path = require('path')
-const webpack = require('webpack')
+const CopyPlugin = require('copy-webpack-plugin');
 
 const paths = {
   src: path.join(__dirname, 'src'),
   dist: path.join(__dirname, 'dist'),
-  data: path.join(__dirname, 'data')
+  public: path.join(__dirname, 'public')
 }
 
 module.exports = {
@@ -19,8 +19,13 @@ module.exports = {
       }
     ]
   },
+  plugins: [
+    new CopyPlugin([
+      {from: paths.public, to: paths.dist}
+    ]),
+  ],
   resolve: {
-    extensions: ['.tsx', '.ts', '.js']
+    extensions: ['.tsx', '.ts', '.js', '.html']
   },
   output: {
     filename: 'app.bundle.js',

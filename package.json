@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "Find where to put things close to most of the US's population",
   "main": "src/app.js",
-  "homepage": "https://gregstoll.com/populationcenters",
+  "homepage": "https://github.com/gregstoll/populationcenters#readme",
   "scripts": {
     "start": "webpack-dev-server --open",
-    "build": "webpack -p --config webpack.prod.config.js --hide-modules",
+    "build": "webpack -p --config webpack.prod.config.js --hide-modules && node replaceSsiTags.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -18,10 +18,10 @@
   "bugs": {
     "url": "https://github.com/gregstoll/populationcenters/issues"
   },
-  "homepage": "https://github.com/gregstoll/populationcenters#readme",
   "devDependencies": {
     "@types/d3": "^5.7.2",
     "@types/topojson": "^3.2.2",
+    "copy-webpack-plugin": "^5.1.1",
     "ts-loader": "^6.2.2",
     "typescript": "^3.8.3",
     "webpack": "^4.42.1",
