@@ -123,3 +123,4 @@ I have a hard time seeing that this would make calculating 4 counties feasible -
 - Different cost functions (instead of just distance squared)
 - Add a slider to control opacity of county circles
 - Look into [k-means clustering](https://towardsdatascience.com/clustering-the-us-population-observation-weighted-k-means-f4d58b370002) - implement in Rust?
+- Why is the location for 1 theme park so far west of [the mean center of the US population](https://en.wikipedia.org/wiki/Mean_center_of_the_United_States_population)?  Seems like they should be the same/very close?
