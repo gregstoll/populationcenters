@@ -22,16 +22,17 @@
     "@types/d3": "^5.7.2",
     "@types/topojson": "^3.2.2",
     "copy-webpack-plugin": "^6.0.3",
+    "node-forge": ">=0.10.0",
     "ts-loader": "^6.2.2",
-    "typescript": "^3.8.3",
-    "webpack": "^4.42.1",
-    "webpack-cli": "^3.3.11",
+    "typescript": "^3.9.7",
+    "webpack": "^4.44.2",
+    "webpack-cli": "^3.3.12",
     "webpack-dev-server": "^3.11.0"
   },
   "dependencies": {
-    "d3": "^5",
+    "d3": "^5.16.0",
     "d3-dsv": "^1.2.0",
-    "d3-geo": "^1.11.9",
+    "d3-geo": "^1.12.1",
     "esm": "^3.2.25",
     "shapefile": "^0.6.6",
     "topojson": "^3.0.2"
