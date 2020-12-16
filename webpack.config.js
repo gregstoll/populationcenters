@@ -1,5 +1,5 @@
 const path = require('path')
-const CopyPlugin = require('copy-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const paths = {
   src: path.join(__dirname, 'src'),
@@ -20,9 +20,11 @@ module.exports = {
     ]
   },
   plugins: [
-    new CopyPlugin([
-      {from: paths.public, to: paths.dist}
-    ]),
+    new CopyWebpackPlugin({
+      patterns: [
+        {from: paths.public, to: paths.dist}
+      ]
+    }),
   ],
   resolve: {
     extensions: ['.tsx', '.ts', '.js', '.html']

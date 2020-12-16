@@ -23,7 +23,7 @@ interface HasFeatures {
     let projection = d3.geoAlbers().scale(1300).translate([width/2, height/2]);
     let path = d3.geoPath();
 
-    let us = await d3.json("data/states-albers-10m.json");
+    let us : any = await d3.json("data/states-albers-10m.json");
     let states = us.objects.states;
     states.geometries = states.geometries.filter(state => state.properties.name !== "Alaska" && state.properties.name !== "Hawaii");
     // 'features' isn't a declared property?
